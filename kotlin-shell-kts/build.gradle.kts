@@ -9,12 +9,10 @@ plugins {
 }
 
 dependencies {
-    implementation(kotlin("stdlib-jdk8"))
-    api(kotlin("reflect"))
+    compileOnly(kotlin("stdlib-jdk8"))
+    compileOnly(kotlin("reflect"))
 
-    compileOnly(kotlin("compiler"))
-    compileOnly(kotlin("scripting-jvm-host"))
-    compileOnly(kotlin("script-util"))
+    implementation(kotlin("main-kts"))
 
     api(project(":kotlin-shell-core"))
     api("org.slf4j:slf4j-nop:1.7.26")

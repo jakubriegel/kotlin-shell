@@ -5,11 +5,27 @@ import eu.jrie.jetbrains.kotlinshell.shell.DEFAULT_PIPELINE_RW_PACKET_SIZE
 import eu.jrie.jetbrains.kotlinshell.shell.DEFAULT_SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE
 import eu.jrie.jetbrains.kotlinshell.shell.ScriptingShell
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import org.jetbrains.kotlin.mainKts.MainKtsConfigurator
+import org.jetbrains.kotlin.script.util.DependsOn
+import org.jetbrains.kotlin.script.util.Import
+import org.jetbrains.kotlin.script.util.Repository
 import java.io.File
 import java.util.Collections.emptyMap
 import kotlin.script.experimental.annotations.KotlinScript
+import kotlin.script.experimental.api.ScriptAcceptedLocation
 import kotlin.script.experimental.api.ScriptCompilationConfiguration
 import kotlin.script.experimental.api.ScriptEvaluationConfiguration
+import kotlin.script.experimental.api.acceptedLocations
+import kotlin.script.experimental.api.defaultImports
+import kotlin.script.experimental.api.ide
+import kotlin.script.experimental.api.refineConfiguration
+import kotlin.script.experimental.api.refineConfigurationBeforeEvaluate
+import kotlin.script.experimental.api.scriptsInstancesSharing
+import kotlin.script.experimental.jvm.dependenciesFromClassContext
+import kotlin.script.experimental.jvm.jvm
+import kotlin.script.experimental.jvmhost.jsr223.configureProvidedPropertiesFromJsr223Context
+import kotlin.script.experimental.jvmhost.jsr223.importAllBindings
+import kotlin.script.experimental.jvmhost.jsr223.jsr223
 
 @Suppress("unused")
 @ExperimentalCoroutinesApi
@@ -38,9 +54,26 @@ open class KotlinShellScript (
 }
 
 class KotlinShellScriptConfiguration : ScriptCompilationConfiguration (
-    {}
+    {
+        defaultImports(DependsOn::class, Repository::class, Import::class)
+        jvm {
+            dependenciesFromClassContext(KotlinShellScriptConfiguration::class, "kotlin-main-kts", "kotlin-stdlib", "kotlin-reflect")
+        }
+        refineConfiguration {
+            onAnnotations(DependsOn::class, Repository::class, Import::class, handler = MainKtsConfigurator())
+        }
+        ide {
+            acceptedLocations(ScriptAcceptedLocation.Everywhere)
+        }
+        jsr223 {
+            importAllBindings(true)
+        }
+    }
 )
 
 class KotlinShellScriptEvaluationConfiguration : ScriptEvaluationConfiguration (
-    {}
+    {
+        scriptsInstancesSharing(true)
+        refineConfigurationBeforeEvaluate(::configureProvidedPropertiesFromJsr223Context)
+    }
 )
