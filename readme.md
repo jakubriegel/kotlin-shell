@@ -1,7 +1,7 @@
 # Kotlin Shell
 
 ## about
-tba
+Tool for performing shell-like programing in Kotlin. Features Kotlin library and `kts` definition for writting scripts
 
 ## get it
 ### library
@@ -24,7 +24,12 @@ implementation("org.slf4j:slf4j-nop:1.7.26")
 ### scripting
 [![library](https://api.bintray.com/packages/jakubriegel/kotlin-shell/kotlin-shell-kts/images/download.svg) ](https://bintray.com/jakubriegel//kotlin-shell/kotlin-shell-kts/_latestVersion)
 
-tba
+The best way to run `sh.kts` scripts is to use `kshell` command. More about it can be found [here](https://github.com/jakubriegel/kshell)
+
+For more low level usage you can run it directly with `kotlinc`. Sample command might be:
+```shell
+kotlinc -cp kotlin-shell-core.jar:kotlin-shell-kts.jar:kotlin-main-kts.jar:[other dependencies] -script hello.sh.kts
+```
 
 ## usage
 ### writing scripts
