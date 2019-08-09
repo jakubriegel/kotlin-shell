@@ -10,7 +10,7 @@ plugins {
 
 allprojects {
     group = "eu.jrie.jetbrains"
-    version = "0.1"
+    version = "0.2"
 
     repositories {
         maven { setUrl("https://dl.bintray.com/kotlin/kotlin-eap") }

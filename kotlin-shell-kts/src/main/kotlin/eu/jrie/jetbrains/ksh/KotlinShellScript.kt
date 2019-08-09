@@ -1,5 +1,9 @@
 package eu.jrie.jetbrains.ksh
 
+import eu.jrie.jetbrains.kotlinshell.processes.pipeline.Pipeline
+import eu.jrie.jetbrains.kotlinshell.processes.process.Process
+import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessState
+import eu.jrie.jetbrains.kotlinshell.processes.process.system.SystemProcess
 import eu.jrie.jetbrains.kotlinshell.shell.DEFAULT_PIPELINE_CHANNEL_BUFFER_SIZE
 import eu.jrie.jetbrains.kotlinshell.shell.DEFAULT_PIPELINE_RW_PACKET_SIZE
 import eu.jrie.jetbrains.kotlinshell.shell.DEFAULT_SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE
@@ -53,9 +57,12 @@ open class KotlinShellScript (
     }
 }
 
+@ExperimentalCoroutinesApi
 class KotlinShellScriptConfiguration : ScriptCompilationConfiguration (
     {
         defaultImports(DependsOn::class, Repository::class, Import::class)
+        defaultImports(*ESSENTIAL_KOTLIN_SHELL_CLASSES)
+        defaultImports(*ESSENTIAL_KOTLIN_SHELL_IMPORTS)
         jvm {
             dependenciesFromClassContext(KotlinShellScriptConfiguration::class, "kotlin-main-kts", "kotlin-stdlib", "kotlin-reflect")
         }
@@ -69,7 +76,28 @@ class KotlinShellScriptConfiguration : ScriptCompilationConfiguration (
             importAllBindings(true)
         }
     }
-)
+) {
+    companion object {
+        private val ESSENTIAL_KOTLIN_SHELL_CLASSES = arrayOf(
+            Process::class, SystemProcess::class, ProcessState::class,
+            Pipeline::class
+        )
+        private val ESSENTIAL_KOTLIN_SHELL_IMPORTS = arrayOf(
+            "eu.jrie.jetbrains.kotlinshell.processes.process.ProcessChannel",
+            "eu.jrie.jetbrains.kotlinshell.processes.process.ProcessReceiveChannel",
+            "eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel",
+            "eu.jrie.jetbrains.kotlinshell.processes.process.ProcessChannelUnit",
+
+            "eu.jrie.jetbrains.kotlinshell.shell.piping.PipelineContextLambda",
+            "eu.jrie.jetbrains.kotlinshell.shell.piping.PipelinePacketLambda",
+            "eu.jrie.jetbrains.kotlinshell.shell.piping.PipelineByteArrayLambda",
+            "eu.jrie.jetbrains.kotlinshell.shell.piping.PipelineStringLambda",
+            "eu.jrie.jetbrains.kotlinshell.shell.piping.PipelineStreamLambda",
+
+            "kotlinx.coroutines.channels.Channel"
+        )
+    }
+}
 
 class KotlinShellScriptEvaluationConfiguration : ScriptEvaluationConfiguration (
     {
