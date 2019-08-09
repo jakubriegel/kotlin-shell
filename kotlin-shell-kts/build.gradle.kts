@@ -19,7 +19,7 @@ dependencies {
 }
 
 tasks.shadowJar {
-    setProperty("archiveName", "ksh.jar")
+    setProperty("archiveName", "kotlin-shell-kts.jar")
     dependencies {
         exclude(dependency("org.jetbrains.kotlin::"))
     }
