@@ -8,6 +8,8 @@ plugins {
     id("com.github.johnrengelman.shadow")
 }
 
+version = "0.1.1"
+
 dependencies {
     compileOnly(kotlin("stdlib-jdk8"))
     compileOnly(kotlin("reflect"))
