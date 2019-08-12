@@ -94,7 +94,8 @@ class KotlinShellScriptConfiguration : ScriptCompilationConfiguration (
             "eu.jrie.jetbrains.kotlinshell.shell.piping.PipelineStringLambda",
             "eu.jrie.jetbrains.kotlinshell.shell.piping.PipelineStreamLambda",
 
-            "kotlinx.coroutines.channels.Channel"
+            "kotlinx.coroutines.channels.Channel",
+            "kotlinx.coroutines.delay"
         )
     }
 }
