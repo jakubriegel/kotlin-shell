@@ -205,6 +205,8 @@ class Pipeline @TestOnly internal constructor (
         else block()
     }
 
+    override fun toString() = "[${this::class.simpleName} ${hashCode()}]"
+
     companion object {
         /**
          * Starts new [Pipeline] with process specified by given [ProcessExecutable]
@@ -262,6 +264,4 @@ class Pipeline @TestOnly internal constructor (
         newIn: ProcessReceiveChannel = this.stdin,
         newOut: ProcessSendChannel = this.stdout
     ) = PipelineExecutionContext(newIn, newOut, stderr, commander)
-
-
 }

@@ -23,7 +23,7 @@ interface ShellProcess : ShellBase {
     /**
      * List of detached processes
      */
-    val detached: List<Process>
+    val detachedProcesses: List<Process>
 
     /**
      * List of daemon processes
@@ -114,47 +114,78 @@ interface ShellProcess : ShellBase {
         return builder()
     }
 
-    suspend fun detach(process: ProcessExecutable)
+    /**
+     * Detaches process from the shell and executes it in the background
+     *
+     * @return detached [Process]
+     */
+    suspend fun detach(executable: ProcessExecutable): Process
 
-    suspend fun detach(vararg process: ProcessExecutable) = process.forEach { detach(it) }
+    /**
+     * Detaches processes from the shell and executes it in the background
+     *
+     * @return list of detached [Process]
+     */
+    suspend fun detach(vararg process: ProcessExecutable) = process.map { detach(it) }
 
+    /**
+     * Joins all detached processes
+     */
     suspend fun joinDetached()
 
-    val jobs: ShellExecutable get() = exec {
-        StringBuilder().let {
-            detached.forEachIndexed { i, p -> it.append("[${i+1}] ${p.name}") }
-            it.toString()
-        }
-    }
-
-    suspend fun fg(index: Int = 1) = fg(detached[index-1])
-
+    /**
+     * Attaches selected [Process]
+     */
     suspend fun fg(process: Process)
 
-    suspend fun daemon(executable: ProcessExecutable)
+    suspend fun daemon(executable: ProcessExecutable): Process
 
-    suspend fun daemon(vararg executable: ProcessExecutable) = executable.forEach { daemon(it) }
+    suspend fun daemon(vararg executable: ProcessExecutable) = executable.map { daemon(it) }
 
+    /**
+     * Joins the [Process]
+     */
     suspend fun Process.join() = commander.awaitProcess(this)
 
+    /**
+     * Joins given processes
+     */
     suspend fun join(vararg process: Process) = process.forEach { it.join() }
 
+    /**
+     * Joins all running processes
+     */
     suspend fun joinAll() = commander.awaitAll()
 
+    /**
+     * Kill the [Process]
+     */
     suspend fun Process.kill() = kill(this)
 
+    /**
+     * Kills given processes
+     */
     suspend fun kill(vararg process: Process) = process.forEach { killProcess(it) }
 
     private suspend fun killProcess(process: Process) = commander.killProcess(process)
 
+    /**
+     * Kills all running processes
+     */
     suspend fun killAll() = commander.killAll()
 
-    suspend operator fun ProcessExecutable.invoke(mode: ExecutionMode = ExecutionMode.ATTACHED) {
+    /**
+     * Starts the [Process] in given [ExecutionMode]
+     *
+     * @return started [Process]
+     */
+    suspend operator fun ProcessExecutable.invoke(mode: ExecutionMode = ExecutionMode.ATTACHED): Process {
         when (mode) {
             ExecutionMode.ATTACHED -> this()
             ExecutionMode.DETACHED -> this@ShellProcess.detach(this)
             ExecutionMode.DAEMON -> this@ShellProcess.daemon(this)
         }
+        return process
     }
 
     /**

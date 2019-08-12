@@ -51,8 +51,9 @@ class ProcessCommander (
     }
 
     internal fun status() = processes.joinToString (
-        "\n",
-        "PID\tTIME\t    CMD\n"
+        separator = "\n",
+        prefix = "PID\tTIME\t    CMD\n",
+        postfix = "\n"
     ) { it.status }
 
     companion object {

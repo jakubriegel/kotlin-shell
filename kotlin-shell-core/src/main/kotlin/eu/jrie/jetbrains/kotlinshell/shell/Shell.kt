@@ -47,10 +47,13 @@ open class Shell protected constructor (
     final override var directory: File = directory
         private set
 
-    override val detached: List<Process>
-        get() = detachedJobs.map { it.first }
+    private var nextDetachedIndex = 1
+        get() = field++
 
-    private val detachedJobs = mutableListOf<Pair<Process, Job>>()
+    override val detachedProcesses: List<Process>
+        get() = detachedProcessesJobs.map { it.second }
+
+    private val detachedProcessesJobs = mutableListOf<Triple<Int, Process, Job>>()
 
     override val daemons: List<Process>
         get() = daemonsExecs.map { it.process }
@@ -60,7 +63,19 @@ open class Shell protected constructor (
     override val pipelines: List<Pipeline>
         get() = detachedPipelines.toList()
 
-    private val detachedPipelines = mutableListOf<Pipeline>()
+    override val detachedPipelines: List<Pipeline>
+        get() = detachedPipelinesJobs.map { it.second }
+
+    private val detachedPipelinesJobs = mutableListOf<Triple<Int, Pipeline, Job>>()
+
+    val jobs: ShellExecutable get() = exec {
+        fun line(index: Int, name: String) = "[$index] $name\n"
+        StringBuilder().let { b ->
+            detachedProcessesJobs.forEach { b.append(line(it.first, "${it.second}")) }
+            detachedPipelinesJobs.forEach { b.append(line(it.first, "${it.second}"))}
+            b.toString()
+        }
+    }
 
     init {
         stdout = initOut()
@@ -69,7 +84,7 @@ open class Shell protected constructor (
         initEnv()
     }
 
-    private fun initOut(): ProcessSendChannel = Channel<ProcessChannelUnit>(PIPELINE_CHANNEL_BUFFER_SIZE).also {
+    private fun initOut(): ProcessSendChannel = Channel<ProcessChannelUnit>().also {
         stdoutJob = commander.scope.launch /*(Dispatchers.IO)*/ {
             it.consumeEach { p ->
                 System.out.writePacket(p)
@@ -107,41 +122,63 @@ open class Shell protected constructor (
         .apply { remove(key) }
         .toMap()
 
-    override suspend fun detach(process: ProcessExecutable) {
-        process.init()
-        process.exec()
-        val job = commander.scope.launch { process.join() }
-        detachedJobs.add(process.process to job)
+    override suspend fun detach(executable: ProcessExecutable) = runProcess(executable) {
+        val job = commander.scope.launch { executable.join() }
+        detachedProcessesJobs.add(Triple(nextDetachedIndex, it, job))
+        logger.debug("detached $it")
     }
 
     override suspend fun detach(pipeConfig: PipeConfig) = this.pipeConfig()
         .apply { if (!closed) { toDefaultEndChannel(stdout) } }
         .also {
-            detachedPipelines.add(it)
+            val job = commander.scope.launch { it.join() }
+            detachedPipelinesJobs.add(Triple(nextDetachedIndex, it, job))
+            logger.debug("detached $it")
         }
 
     override suspend fun joinDetached() {
-        detachedJobs.forEach { it.second.join() }
-        detachedPipelines.forEach { it.join() }
+        detachedProcessesJobs.forEach { it.second.join() }
+        detachedPipelinesJobs.forEach { it.second.join() }
+    }
+
+    /**
+     * Attaches job with given index
+     */
+    suspend fun fg(index: Int = 1) {
+        val process = detachedProcessesJobs.find { it.first == index }
+        if (process != null) fg(process.second)
+        else {
+            val pipeline = detachedPipelinesJobs.find { it.first == index }
+            if (pipeline != null) fg(pipeline.second)
+            else throw NoSuchElementException("no detached job with given index")
+        }
     }
 
     override suspend fun fg(process: Process) {
-        detachedJobs.first { it.first == process }
-            .apply {
-                commander.awaitProcess(first)
-                second.join()
-            }
+        detachedProcessesJobs.first { it.second == process }
+            .third.join()
     }
 
-    override suspend fun daemon(executable: ProcessExecutable) {
+    override suspend fun fg(pipeline: Pipeline) {
+        detachedPipelinesJobs.first { it.second == pipeline }
+            .third.join()
+    }
+
+    override suspend fun daemon(executable: ProcessExecutable) = runProcess(executable) {
+        daemonsExecs.add(executable)
+        logger.debug("started daemon $it")
+    }
+
+    private suspend fun runProcess(executable: ProcessExecutable, afterExecute: (Process) -> Unit): Process {
         executable.init()
         executable.exec()
-        daemonsExecs.add(executable)
-        logger.debug("started daemon ${executable.process}")
+        return executable.process.also(afterExecute)
     }
 
     override suspend fun finalize() {
         joinDetached()
+        stdout.close()
+        stdoutJob.join()
         closeOut()
     }
 

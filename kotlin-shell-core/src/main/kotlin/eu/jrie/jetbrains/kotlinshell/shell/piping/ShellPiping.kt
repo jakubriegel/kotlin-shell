@@ -27,6 +27,11 @@ interface ShellPiping : ShellPipingFrom, ShellPipingThrough, ShellPipingTo, Shel
     val pipelines: List<Pipeline>
 
     /**
+     * List of detached pipelines
+     */
+    val detachedPipelines: List<Pipeline>
+
+    /**
      * Creates and executes new [Pipeline] specified by DSL [pipeConfig] and executes it in given [mode]
      * Part of piping DSL
      */
@@ -41,6 +46,11 @@ interface ShellPiping : ShellPipingFrom, ShellPipingThrough, ShellPipingTo, Shel
      * Part of piping DSL
      */
     suspend fun detach(pipeConfig: PipeConfig): Pipeline
+
+    /**
+     * Attaches selected [Pipeline]
+     */
+    suspend fun fg(pipeline: Pipeline)
 
     /**
      * Awaits this [Pipeline]

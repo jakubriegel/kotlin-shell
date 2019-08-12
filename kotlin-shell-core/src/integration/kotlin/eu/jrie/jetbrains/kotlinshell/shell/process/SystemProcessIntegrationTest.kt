@@ -104,7 +104,7 @@ class SystemProcessIntegrationTest : ProcessBaseIntegrationTest() {
     }
 
     @Test
-    fun `should detach process with extension function`() {
+    fun `should detach process with invoke`() {
         // given
         val file = scriptFile(500)
         var stateAfterCall: ProcessState? = null
@@ -133,8 +133,7 @@ class SystemProcessIntegrationTest : ProcessBaseIntegrationTest() {
             detach(p1, p2, p3)
 
             // then
-            assertIterableEquals(listOf(p1.process, p2.process, p3.process), detached)
-            // TODO: check "jobs()"
+            assertIterableEquals(listOf(p1.process, p2.process, p3.process), detachedProcesses)
         }
     }
 

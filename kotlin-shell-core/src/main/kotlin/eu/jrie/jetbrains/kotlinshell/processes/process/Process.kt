@@ -32,7 +32,7 @@ protected constructor (
     final override fun toString() = name
 
     val status: String
-        get() = "$vPID\t${since(pcb.startTime)}\t$statusCmd\t$statusOther state=${pcb.state}"
+        get() = "$vPID\t${since(pcb.startTime)}    $statusCmd\t$statusOther state=${pcb.state}"
 
     protected abstract val statusCmd: String
     protected abstract val statusOther: String

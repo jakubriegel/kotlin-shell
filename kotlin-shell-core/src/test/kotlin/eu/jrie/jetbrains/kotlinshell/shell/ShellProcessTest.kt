@@ -54,7 +54,7 @@ class ShellProcessTest {
     }
 
     @Test
-    fun `should construct system process executable from command`() {
+    fun `should construct system process executable with extension function from command`() {
         // given
         mockkConstructor(SystemProcessConfiguration::class)
         every { anyConstructed<SystemProcessConfiguration>().builder() } returns mockk()
@@ -71,7 +71,24 @@ class ShellProcessTest {
     }
 
     @Test
-    fun `should create system process executable from command with args`() {
+    fun `should construct system process executable from command`() {
+        // given
+        mockkConstructor(SystemProcessConfiguration::class)
+        every { anyConstructed<SystemProcessConfiguration>().builder() } returns mockk()
+
+        // when
+        with(shell) { systemProcess("cmd") }
+
+        // then
+        verify {
+            anyConstructed<SystemProcessConfiguration>().env(any())
+            anyConstructed<SystemProcessConfiguration>().dir(any())
+            anyConstructed<SystemProcessConfiguration>().builder()
+        }
+    }
+
+    @Test
+    fun `should create system process executable with extension function from command with args`() {
         // given
         mockkConstructor(SystemProcessConfiguration::class)
         every { anyConstructed<SystemProcessConfiguration>().builder() } returns mockk()
@@ -88,7 +105,24 @@ class ShellProcessTest {
     }
 
     @Test
-    fun `should construct system process executable from file`() {
+    fun `should create system process executable from command with args`() {
+        // given
+        mockkConstructor(SystemProcessConfiguration::class)
+        every { anyConstructed<SystemProcessConfiguration>().builder() } returns mockk()
+
+        // when
+        with(shell) { systemProcess("some cmd with args") }
+
+        // then
+        verify {
+            anyConstructed<SystemProcessConfiguration>().env(any())
+            anyConstructed<SystemProcessConfiguration>().dir(any())
+            anyConstructed<SystemProcessConfiguration>().builder()
+        }
+    }
+
+    @Test
+    fun `should construct system process executable with extension function from file`() {
         // given
         mockkConstructor(SystemProcessConfiguration::class)
         every { anyConstructed<SystemProcessConfiguration>().builder() } returns mockk()
@@ -106,7 +140,25 @@ class ShellProcessTest {
     }
 
     @Test
-    fun `should create system process executable from file with args`() {
+    fun `should construct system process executable from file`() {
+        // given
+        mockkConstructor(SystemProcessConfiguration::class)
+        every { anyConstructed<SystemProcessConfiguration>().builder() } returns mockk()
+        val file = File("some/file")
+
+        // when
+        with(shell) { systemProcess(file) }
+
+        // then
+        verify {
+            anyConstructed<SystemProcessConfiguration>().env(any())
+            anyConstructed<SystemProcessConfiguration>().dir(any())
+            anyConstructed<SystemProcessConfiguration>().builder()
+        }
+    }
+
+    @Test
+    fun `should create system process executable with extension function from file with args`() {
         // given
         mockkConstructor(SystemProcessConfiguration::class)
         every { anyConstructed<SystemProcessConfiguration>().builder() } returns mockk()
@@ -124,6 +176,24 @@ class ShellProcessTest {
     }
 
     @Test
+    fun `should create system process executable from file with args`() {
+        // given
+        mockkConstructor(SystemProcessConfiguration::class)
+        every { anyConstructed<SystemProcessConfiguration>().builder() } returns mockk()
+        val file = File("some/file")
+
+        // when
+        with(shell) { systemProcess(file, "arg1", "arg2") }
+
+        // then
+        verify {
+            anyConstructed<SystemProcessConfiguration>().env(any())
+            anyConstructed<SystemProcessConfiguration>().dir(any())
+            anyConstructed<SystemProcessConfiguration>().builder()
+        }
+    }
+
+    @Test
     fun `should invoke system process executable from command`() = runBlocking {
         // given
         mockkConstructor(SystemProcessConfiguration::class)
@@ -131,6 +201,7 @@ class ShellProcessTest {
 
         mockkConstructor(ProcessExecutable::class)
         coEvery { anyConstructed<ProcessExecutable>().invoke(any()) } just runs
+        every { anyConstructed<ProcessExecutable>().process } returns mockk()
 
         // when
         with(shell) { "cmd"() }
@@ -152,6 +223,7 @@ class ShellProcessTest {
 
         mockkConstructor(ProcessExecutable::class)
         coEvery { anyConstructed<ProcessExecutable>().invoke(any()) } just runs
+        every { anyConstructed<ProcessExecutable>().process } returns mockk()
 
         val file = File("some/file")
 
@@ -175,6 +247,7 @@ class ShellProcessTest {
 
         mockkConstructor(ProcessExecutable::class)
         coEvery { anyConstructed<ProcessExecutable>().invoke(any()) } just runs
+        every { anyConstructed<ProcessExecutable>().process } returns mockk()
 
         val file = File("some/file")
 
@@ -314,15 +387,15 @@ class ShellProcessTest {
 
     @ExperimentalCoroutinesApi
     private class SampleShell : ShellProcess {
-        override val detached: List<Process> = emptyList()
+        override val detachedProcesses: List<Process> = emptyList()
         override val daemons: List<Process> = emptyList()
         override val nullin: ProcessReceiveChannel = Channel()
         override val nullout: ProcessSendChannel = Channel()
 
-        override suspend fun detach(process: ProcessExecutable) = Unit
+        override suspend fun detach(executable: ProcessExecutable): Process = mockk()
         override suspend fun joinDetached() = Unit
         override suspend fun fg(process: Process) = Unit
-        override suspend fun daemon(executable: ProcessExecutable) = Unit
+        override suspend fun daemon(executable: ProcessExecutable): Process = mockk()
 
         override val environment: Map<String, String> = emptyMap()
         override val variables: Map<String, String> = emptyMap()
