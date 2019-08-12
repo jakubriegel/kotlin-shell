@@ -1,4 +1,4 @@
-package eu.jrie.jetbrains.ksh
+package eu.jrie.jetbrains.kotlinshell
 
 import eu.jrie.jetbrains.kotlinshell.processes.pipeline.Pipeline
 import eu.jrie.jetbrains.kotlinshell.processes.process.Process
