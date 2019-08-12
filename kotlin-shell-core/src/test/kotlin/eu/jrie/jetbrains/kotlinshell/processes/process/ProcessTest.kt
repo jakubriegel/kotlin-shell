@@ -72,17 +72,6 @@ class ProcessTest {
     }
 
     @Test
-    fun `should get process name`() {
-        // when
-        runTest { /* initialize the process */ }
-        val name = process.name
-        val string = process.toString()
-
-        // then
-        // TODO: assertEquals(name, string())
-    }
-
-    @Test
     fun `should return true if process finished executing but state is still RUNNING`() {
         // when
         val result = runTest {
