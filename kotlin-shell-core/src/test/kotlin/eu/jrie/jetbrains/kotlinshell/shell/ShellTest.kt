@@ -2,7 +2,6 @@ package eu.jrie.jetbrains.kotlinshell.shell
 
 import eu.jrie.jetbrains.kotlinshell.processes.ProcessCommander
 import eu.jrie.jetbrains.kotlinshell.testutils.TestDataFactory.ENV_VAR_1
-import io.mockk.every
 import io.mockk.spyk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
@@ -17,36 +16,37 @@ class ShellTest {
     @Test
     fun `should change the directory to given one`() = runTest {
         // given
-        val dir = spyk(File("/some/path")) {
-            every { isDirectory } returns true
-        }
+        val dir = File("someDir").apply { mkdirs() }
 
         // when
         shell.cd(dir)
 
         // then
-        assertEquals(dir, shell.directory)
+        assertEquals(dir.absoluteFile, shell.directory)
         assertEquals(dir.absolutePath, shell.env("PWD"))
+
+        run<Unit> { dir.deleteRecursively() }
     }
 
     @Test
     fun `should update OLDPWD after changed directory`() = runTest {
         // given
-        val dir1 = spyk(File("/some/path")) {
-            every { isDirectory } returns true
-        }
-        val dir2 = spyk(File("/some/other/path")) {
-            every { isDirectory } returns true
-        }
+        val dir1 = File("someDir1").apply { mkdirs() }
+        val dir2 = File("someDir2").apply { mkdirs() }
 
         // when
         shell.cd(dir1)
         shell.cd(dir2)
 
         // then
-        assertEquals(dir2, shell.directory)
+        assertEquals(dir2.absoluteFile, shell.directory)
         assertEquals(dir2.absolutePath, shell.env("PWD"))
         assertEquals(dir1.absolutePath, shell.env("OLDPWD"))
+
+        run<Unit> {
+            dir1.deleteRecursively()
+            dir2.deleteRecursively()
+        }
     }
 
     @Test

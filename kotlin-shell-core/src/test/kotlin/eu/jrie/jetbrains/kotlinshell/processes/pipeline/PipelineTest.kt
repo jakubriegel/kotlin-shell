@@ -281,6 +281,7 @@ class PipelineTest {
         assertTrue(pipeline.closed)
     }
 
+    @Suppress("UNUSED_EXPRESSION") // bug in Kotlin compiler 1.3.50 EAP
     private fun <T> runTest(test: suspend PipelineTest.() -> T): T = runBlocking {
         contextMock = contextMock(this)
         test()
