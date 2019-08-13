@@ -3,7 +3,7 @@
 ## about
 tba
 
-## get it
+## get and run
 ### library
 [![library](https://api.bintray.com/packages/jakubriegel/kotlin-shell/kotlin-shell-core/images/download.svg) ](https://bintray.com/jakubriegel//kotlin-shell/kotlin-shell-core/_latestVersion)
 
