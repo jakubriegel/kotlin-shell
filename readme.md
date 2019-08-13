@@ -26,6 +26,13 @@ implementation("org.slf4j:slf4j-nop:1.7.26")
 
 Kotlin Shell scripts have `sh.kts` extension.
 
+Some enviroment variables may be set to customize script execution:
+* `SH_KTS_SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE`
+* `SH_KTS_PIPELINE_RW_PACKET_SIZE`
+* `SH_KTS_PIPELINE_CHANNEL_BUFFER_SIZE`
+
+If any of these will not be set, default values will be used.
+
 #### `kshell` command
 
 ##### command line
