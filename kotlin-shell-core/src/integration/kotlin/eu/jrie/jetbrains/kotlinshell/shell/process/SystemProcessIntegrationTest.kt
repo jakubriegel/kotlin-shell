@@ -151,7 +151,7 @@ class SystemProcessIntegrationTest : ProcessBaseIntegrationTest() {
             detach(p1, p2, p3)
 
             // then
-            assertIterableEquals(listOf(p1.process, p2.process, p3.process), detachedProcesses)
+            assertIterableEquals(listOf(1 to p1.process, 2 to p2.process, 3 to p3.process), detachedProcesses)
         }
     }
 
