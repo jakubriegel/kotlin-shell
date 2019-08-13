@@ -387,7 +387,7 @@ class ShellProcessTest {
 
     @ExperimentalCoroutinesApi
     private class SampleShell : ShellProcess {
-        override val detachedProcesses: List<Process> = emptyList()
+        override val detachedProcesses: List<Pair<Int, Process>> = emptyList()
         override val daemons: List<Process> = emptyList()
         override val nullin: ProcessReceiveChannel = Channel()
         override val nullout: ProcessSendChannel = Channel()
@@ -400,8 +400,6 @@ class ShellProcessTest {
         override val environment: Map<String, String> = emptyMap()
         override val variables: Map<String, String> = emptyMap()
         override val directory: File = File("path")
-
-        override fun exec(block: Shell.() -> String): ShellExecutable = mockk()
 
         override suspend fun finalize() = Unit
 

@@ -50,8 +50,8 @@ open class Shell protected constructor (
     private var nextDetachedIndex = 1
         get() = field++
 
-    override val detachedProcesses: List<Process>
-        get() = detachedProcessesJobs.map { it.second }
+    override val detachedProcesses: List<Pair<Int, Process>>
+        get() = detachedProcessesJobs.map { it.first to it.second }
 
     private val detachedProcessesJobs = mutableListOf<Triple<Int, Process, Job>>()
 
@@ -60,15 +60,12 @@ open class Shell protected constructor (
 
     private val daemonsExecs = mutableListOf<ProcessExecutable>()
 
-    override val pipelines: List<Pipeline>
-        get() = detachedPipelines.toList()
-
-    override val detachedPipelines: List<Pipeline>
-        get() = detachedPipelinesJobs.map { it.second }
+    override val detachedPipelines: List<Pair<Int, Pipeline>>
+        get() = detachedPipelinesJobs.map { it.first to it.second }
 
     private val detachedPipelinesJobs = mutableListOf<Triple<Int, Pipeline, Job>>()
 
-    val jobs: ShellExecutable get() = exec {
+    val jobs: ShellCommand get() = command {
         fun line(index: Int, name: String) = "[$index] $name\n"
         StringBuilder().let { b ->
             detachedProcessesJobs.forEach { b.append(line(it.first, "${it.second}")) }
@@ -181,8 +178,6 @@ open class Shell protected constructor (
         stdoutJob.join()
         closeOut()
     }
-
-    override fun exec(block: Shell.() -> String) = ShellExecutable(this, block)
 
     suspend fun shell(
         vars: Map<String, String> = emptyMap(),

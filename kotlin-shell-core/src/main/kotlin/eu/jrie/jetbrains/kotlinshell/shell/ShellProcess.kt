@@ -23,7 +23,7 @@ interface ShellProcess : ShellBase {
     /**
      * List of detached processes
      */
-    val detachedProcesses: List<Process>
+    val detachedProcesses: List<Pair<Int, Process>>
 
     /**
      * List of daemon processes
@@ -191,7 +191,7 @@ interface ShellProcess : ShellBase {
     /**
      * Retrieves all process data
      */
-    val ps: ShellExecutable get() = exec { commander.status() }
+    val ps: ShellCommand get() = command { commander.status() }
 
     /**
      * Retrieves [Process] by its vPID

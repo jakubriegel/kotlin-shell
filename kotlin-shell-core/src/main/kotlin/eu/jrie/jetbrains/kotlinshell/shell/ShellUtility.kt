@@ -65,7 +65,7 @@ interface ShellUtility : ShellBase {
      * @see [set]
      * @see [shellEnv]
      */
-    val env: ShellExecutable get() = exec { environment.toEnvString() }
+    val env: ShellCommand get() = command { environment.toEnvString() }
 
     /**
      * Retrieves environment variable matching given key or `""`
@@ -78,7 +78,7 @@ interface ShellUtility : ShellBase {
     /**
      * Retrieves shell environment variables
      */
-    val set: ShellExecutable get() = exec { shellEnv.toEnvString() }
+    val set: ShellCommand get() = command { shellEnv.toEnvString() }
 
     /**
      * Retrieves all environment variables and returns them as a [Map]

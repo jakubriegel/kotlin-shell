@@ -21,6 +21,13 @@ abstract class Executable (
         exec()
         join()
     }
+
+    /**
+     * Copies this [Executable]
+     *
+     * @return new [Executable] that is copy of this [Executable]
+     */
+    abstract fun copy(): Executable
 }
 
 @ExperimentalCoroutinesApi
@@ -48,5 +55,5 @@ class ProcessExecutable (
         afterJoin()
     }
 
-
+    override fun copy() = ProcessExecutable(context as ProcessExecutionContext, builder)
 }

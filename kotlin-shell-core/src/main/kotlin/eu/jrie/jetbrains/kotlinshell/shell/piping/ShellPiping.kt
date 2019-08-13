@@ -22,14 +22,9 @@ typealias PipelineFork = suspend (ProcessReceiveChannel) -> Unit
 interface ShellPiping : ShellPipingFrom, ShellPipingThrough, ShellPipingTo, ShellUtility {
 
     /**
-     * List of all pipelines in this shell
-     */
-    val pipelines: List<Pipeline>
-
-    /**
      * List of detached pipelines
      */
-    val detachedPipelines: List<Pipeline>
+    val detachedPipelines: List<Pair<Int, Pipeline>>
 
     /**
      * Creates and executes new [Pipeline] specified by DSL [pipeConfig] and executes it in given [mode]

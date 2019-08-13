@@ -6,8 +6,6 @@ import eu.jrie.jetbrains.kotlinshell.processes.pipeline.PipelineContextLambda
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessChannel
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessReceiveChannel
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
-import eu.jrie.jetbrains.kotlinshell.shell.Shell
-import eu.jrie.jetbrains.kotlinshell.shell.ShellExecutable
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -151,8 +149,6 @@ class ShellPipingThroughTest {
         override val stdout: ProcessSendChannel = Channel()
         override val stderr: ProcessSendChannel = Channel()
         override val stdin: ProcessReceiveChannel = Channel()
-
-        override fun exec(block: Shell.() -> String): ShellExecutable = mockk()
 
         override suspend fun finalize() {}
 
