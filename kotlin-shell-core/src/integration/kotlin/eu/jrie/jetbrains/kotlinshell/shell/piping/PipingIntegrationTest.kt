@@ -106,7 +106,7 @@ class PipingIntegrationTest : PipingBaseIntegrationTest() {
                 cmd { "echo" withArg content }
             }
 
-            echo pipe stdout join it
+            echo pipe stdout join now
         }
 
         // then

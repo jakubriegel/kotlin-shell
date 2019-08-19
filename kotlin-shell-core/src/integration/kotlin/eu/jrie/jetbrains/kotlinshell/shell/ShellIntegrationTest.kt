@@ -1,8 +1,10 @@
 package eu.jrie.jetbrains.kotlinshell.shell
 
 import eu.jrie.jetbrains.kotlinshell.ProcessBaseIntegrationTest
+import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -174,6 +176,26 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
 
         // then
         assertEquals("$value\n", readResult())
+    }
+
+    @Test
+    fun `should create sub shell with inherited stdout and stderr`() {
+        // given
+        var fatherOut: ProcessSendChannel? = null
+        var childOut: ProcessSendChannel? = null
+
+        // when
+        shell {
+            fatherOut = stdout
+            shell {
+                childOut = stdout
+            }
+        }
+
+        // then
+        assertNotEquals(null, fatherOut)
+        assertNotEquals(null, childOut)
+        assertEquals(fatherOut, childOut)
     }
 
     @Test

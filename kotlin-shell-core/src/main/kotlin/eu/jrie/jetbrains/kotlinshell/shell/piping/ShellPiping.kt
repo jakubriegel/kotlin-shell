@@ -56,7 +56,7 @@ interface ShellPiping : ShellPipingFrom, ShellPipingThrough, ShellPipingTo, Shel
      */
     @Suppress("UNUSED_PARAMETER")
     @ExperimentalCoroutinesApi
-    suspend infix fun Pipeline.join(it: It) = join()
+    suspend infix fun Pipeline.join(it: Now) = join()
 
     private suspend fun forkStdErr(process: ProcessExecutable, fork: PipelineFork) {
         forkStdErr(
@@ -108,15 +108,15 @@ interface ShellPiping : ShellPipingFrom, ShellPipingThrough, ShellPipingTo, Shel
 }
 
 /**
- * Object for [it] alias
+ * Object for [now] alias
  */
-object It
+object Now
 /**
  * Alias to be used in piping DSL with [Pipeline.join]
  *
- * Ex: `p1 pipe p2 await all`
+ * Ex: `p1 pipe p2 join now`
  *
  * @see ShellPiping
  * @see Pipeline
  */
-typealias it = It
+typealias now = Now

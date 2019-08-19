@@ -25,6 +25,8 @@ open class Shell protected constructor (
     variables: Map<String, String>,
     directory: File,
     final override val commander: ProcessCommander,
+    final override val stdout: ProcessSendChannel,
+    final override val stderr: ProcessSendChannel,
     final override val SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE: Int,
     final override val PIPELINE_RW_PACKET_SIZE: Long,
     final override val PIPELINE_CHANNEL_BUFFER_SIZE: Int
@@ -34,8 +36,7 @@ open class Shell protected constructor (
     final override val nullout: ProcessSendChannel = NullSendChannel()
 
     final override val stdin: ProcessReceiveChannel = nullin
-    final override val stdout: ProcessSendChannel
-    final override val stderr: ProcessSendChannel
+
     private lateinit var stdoutJob: Job
 
     final override var environment: Map<String, String> = environment
@@ -75,19 +76,7 @@ open class Shell protected constructor (
     }
 
     init {
-        stdout = initOut()
-        stderr = stdout
-
         initEnv()
-    }
-
-    private fun initOut(): ProcessSendChannel = Channel<ProcessChannelUnit>().also {
-        stdoutJob = commander.scope.launch /*(Dispatchers.IO)*/ {
-            it.consumeEach { p ->
-                System.out.writePacket(p)
-                System.out.flush()
-            }
-        }
     }
 
     private fun initEnv() {
@@ -173,10 +162,14 @@ open class Shell protected constructor (
     }
 
     override suspend fun finalize() {
-        joinDetached()
+        finalizeDetached()
         stdout.close()
         stdoutJob.join()
         closeOut()
+    }
+
+    private suspend fun finalizeDetached() {
+        joinDetached()
     }
 
     suspend fun shell(
@@ -188,14 +181,43 @@ open class Shell protected constructor (
         vars,
         dir,
         commander,
+        stdout,
+        stderr,
         SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE,
         PIPELINE_RW_PACKET_SIZE,
         PIPELINE_CHANNEL_BUFFER_SIZE
     )
         .apply { script() }
-        .finalize()
+        .finalizeDetached()
 
     companion object {
+
+        protected fun build(
+            environment: Map<String, String>,
+            variables: Map<String, String>,
+            directory: File,
+            commander: ProcessCommander,
+            SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE: Int,
+            PIPELINE_RW_PACKET_SIZE: Long,
+            PIPELINE_CHANNEL_BUFFER_SIZE: Int
+        ): Shell {
+            val stdout = initOut(commander)
+            return Shell(
+                environment, variables, directory,
+                commander, stdout.first, stdout.first,
+                SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE, PIPELINE_RW_PACKET_SIZE, PIPELINE_CHANNEL_BUFFER_SIZE
+            ).apply { stdoutJob = stdout.second }
+        }
+
+        private fun initOut(commander: ProcessCommander): Pair<ProcessSendChannel, Job> = Channel<ProcessChannelUnit>()
+            .run {
+                this to commander.scope.launch {
+                    consumeEach { p ->
+                        System.out.writePacket(p)
+                        System.out.flush()
+                    }
+                }
+            }
 
         internal fun build(
             env: Map<String, String>?,
@@ -205,7 +227,7 @@ open class Shell protected constructor (
             pipelineRwPacketSize: Long,
             pipelineChannelBufferSize: Int
         ) =
-            Shell(
+            build(
                 env ?: emptyMap(),
                 emptyMap(),
                 assertDir(dir?.absoluteFile ?: currentDir()),
