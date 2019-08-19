@@ -16,13 +16,12 @@ dependencies {
     api("org.zeroturnaround:zt-exec:1.11")
     api("org.slf4j:slf4j-api:1.7.26")
 
-    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0-M2")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0-RC2")
     api("org.jetbrains.kotlinx:kotlinx-io-jvm:0.1.11")
 
     testImplementation(kotlin("reflect"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.5.0")
     testImplementation("io.mockk:mockk:1.9.3")
-    testImplementation("org.apache.logging.log4j:log4j-core:2.12.0")
     testImplementation("org.apache.logging.log4j:log4j-slf4j-impl:2.12.0")
 }
 

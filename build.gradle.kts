@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.3.50-eap-54"
+    kotlin("jvm") version "1.3.50-eap-86"
     `maven-publish`
     id("com.jfrog.bintray") version "1.8.4"
     id("org.jetbrains.dokka") version "0.9.17"
@@ -10,7 +10,7 @@ plugins {
 
 allprojects {
     group = "eu.jrie.jetbrains"
-    version = "0.2"
+    version = "0.2-dev"
 
     repositories {
         maven { setUrl("https://dl.bintray.com/kotlin/kotlin-eap") }
