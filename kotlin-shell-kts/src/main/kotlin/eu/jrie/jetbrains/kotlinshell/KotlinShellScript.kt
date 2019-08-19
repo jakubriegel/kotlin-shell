@@ -31,6 +31,11 @@ import kotlin.script.experimental.jvmhost.jsr223.configureProvidedPropertiesFrom
 import kotlin.script.experimental.jvmhost.jsr223.importAllBindings
 import kotlin.script.experimental.jvmhost.jsr223.jsr223
 
+/**
+ * Script definition for writing shell scripts in Kotlin Script
+ *
+ * @see ScriptingShell
+ */
 @Suppress("unused")
 @ExperimentalCoroutinesApi
 @KotlinScript(
@@ -93,6 +98,10 @@ class KotlinShellScriptConfiguration : ScriptCompilationConfiguration (
             "eu.jrie.jetbrains.kotlinshell.shell.piping.PipelineByteArrayLambda",
             "eu.jrie.jetbrains.kotlinshell.shell.piping.PipelineStringLambda",
             "eu.jrie.jetbrains.kotlinshell.shell.piping.PipelineStreamLambda",
+
+            "eu.jrie.jetbrains.kotlinshell.shell.up",
+            "eu.jrie.jetbrains.kotlinshell.shell.pre",
+            "eu.jrie.jetbrains.kotlinshell.shell.piping.it",
 
             "kotlinx.coroutines.channels.Channel",
             "kotlinx.coroutines.delay"
