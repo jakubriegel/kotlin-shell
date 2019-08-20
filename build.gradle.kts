@@ -33,6 +33,7 @@ val dokkaJarConfig: (TaskProvider<DokkaTask>) ->  Jar.() -> Unit by extra {
 
 val sourcesJarConfig: Jar.() -> Unit by extra {
     {
+        group = JavaBasePlugin.BUILD_TASK_NAME
         dependsOn(JavaPlugin.CLASSES_TASK_NAME)
         setProperty("classifier", "sources")
         from(project.sourceSets["main"].allSource)
