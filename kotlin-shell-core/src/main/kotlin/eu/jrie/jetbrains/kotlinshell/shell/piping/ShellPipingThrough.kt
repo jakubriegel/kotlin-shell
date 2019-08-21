@@ -14,10 +14,10 @@ import kotlinx.io.core.writeFully
 import java.io.InputStream
 import java.io.OutputStream
 
-typealias PipelinePacketLambda = (ByteReadPacket) -> Pair<ByteReadPacket, ByteReadPacket>
-typealias PipelineByteArrayLambda = (ByteArray) -> Pair<ByteArray, ByteArray>
-typealias PipelineStringLambda = (String) -> Pair<String, String>
-typealias PipelineStreamLambda = (InputStream, OutputStream, OutputStream) -> Unit
+typealias PipelinePacketLambda = suspend (ByteReadPacket) -> Pair<ByteReadPacket, ByteReadPacket>
+typealias PipelineByteArrayLambda = suspend (ByteArray) -> Pair<ByteArray, ByteArray>
+typealias PipelineStringLambda = suspend (String) -> Pair<String, String>
+typealias PipelineStreamLambda = suspend (InputStream, OutputStream, OutputStream) -> Unit
 
 @ExperimentalCoroutinesApi
 interface ShellPipingThrough : ShellPipingTo {
