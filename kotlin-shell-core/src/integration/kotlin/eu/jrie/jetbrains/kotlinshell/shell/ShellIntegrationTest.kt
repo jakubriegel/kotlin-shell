@@ -21,7 +21,7 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
 
         // when
         shell (
-            dir = givenDir
+            testDir = givenDir
         ) {
             pipeline { "ls".process() pipe storeResult }
             pwd = env("PWD")
@@ -57,7 +57,7 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
 
         // when
         shell (
-            env = env
+            testEnv = env
         ) {
             "chmod +x ${file.name}"()
             "./${file.name}".process() pipe storeResult
@@ -76,7 +76,7 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
 
         // when
         shell (
-            env = env
+            testEnv = env
         ) {
             val echo = systemProcess { cmd { "echo" withArg env(variable) } }
             echo pipe storeResult
@@ -111,7 +111,7 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
 
         // when
         shell (
-            dir = givenDir
+            testDir = givenDir
         ) {
             shell (dir = subDir) {
                 "ls".process() pipe storeResult
@@ -123,26 +123,26 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
     }
 
     @Test
-    fun `should create sub shell with new environment`() {
+    fun `should create sub shell with new variables`() {
         // given
         val variable = "VARIABLE"
         val value = "value"
         val newValue = "newValue"
         val env = mapOf(variable to value)
-        val newEnv = mapOf(variable to newValue)
+        val newVars = mapOf(variable to newValue)
 
         val code = "echo \$$variable"
         val file = testFile(content = code)
 
         // when
         shell (
-            env = env
+            testEnv = env
         ) {
 
             "chmod +x ${file.name}"()
 
             shell (
-                env = newEnv
+                vars = newVars
             ) {
                 "./${file.name}".process() pipe storeResult
             }
@@ -164,7 +164,7 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
 
         // when
         shell (
-            env = env
+            testEnv = env
         ) {
 
             "chmod +x ${file.name}"()
@@ -270,7 +270,7 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
     fun `should throw exception when given dir is not directory`() {
         assertThrows<AssertionError> {
             shell (
-                dir = testFile()
+                testDir = testFile()
             ) {  }
         }
     }

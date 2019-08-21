@@ -57,11 +57,11 @@ abstract class BaseIntegrationTest {
 
     @TestOnly
     protected fun shell(
-        env: Map<String, String>? = null,
-        dir: File? = testDirectory,
-        script: ShellScript
+        testEnv: Map<String, String>? = null,
+        testDir: File? = testDirectory,
+        testScript: ShellScript
     ) = runBlocking {
-        eu.jrie.jetbrains.kotlinshell.shell.shell(env, dir, this) { script() }
+        eu.jrie.jetbrains.kotlinshell.shell.shell(testEnv, testDir, this) { testScript() }
     }
 
     companion object {
