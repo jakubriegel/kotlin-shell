@@ -16,17 +16,28 @@ import org.jetbrains.kotlin.script.util.Repository
 import java.io.File
 import java.util.Collections.emptyMap
 import kotlin.script.experimental.annotations.KotlinScript
+import kotlin.script.experimental.api.CompiledScript
 import kotlin.script.experimental.api.ScriptAcceptedLocation
 import kotlin.script.experimental.api.ScriptCompilationConfiguration
 import kotlin.script.experimental.api.ScriptEvaluationConfiguration
+import kotlin.script.experimental.api.SourceCode
 import kotlin.script.experimental.api.acceptedLocations
 import kotlin.script.experimental.api.defaultImports
+import kotlin.script.experimental.api.hostConfiguration
 import kotlin.script.experimental.api.ide
 import kotlin.script.experimental.api.refineConfiguration
 import kotlin.script.experimental.api.refineConfigurationBeforeEvaluate
 import kotlin.script.experimental.api.scriptsInstancesSharing
+import kotlin.script.experimental.host.with
+import kotlin.script.experimental.jvm.CompiledJvmScriptsCache
+import kotlin.script.experimental.jvm.baseClassLoader
+import kotlin.script.experimental.jvm.compilationCache
+import kotlin.script.experimental.jvm.defaultJvmScriptingHostConfiguration
 import kotlin.script.experimental.jvm.dependenciesFromClassContext
+import kotlin.script.experimental.jvm.jdkHome
 import kotlin.script.experimental.jvm.jvm
+import kotlin.script.experimental.jvm.updateClasspath
+import kotlin.script.experimental.jvm.util.KotlinJars
 import kotlin.script.experimental.jvmhost.jsr223.configureProvidedPropertiesFromJsr223Context
 import kotlin.script.experimental.jvmhost.jsr223.importAllBindings
 import kotlin.script.experimental.jvmhost.jsr223.jsr223
@@ -65,10 +76,29 @@ open class KotlinShellScript (
 @ExperimentalCoroutinesApi
 class KotlinShellScriptConfiguration : ScriptCompilationConfiguration (
     {
+//        hostConfiguration(
+//            defaultJvmScriptingHostConfiguration.with {
+//                jvm {
+//                    compilationCache(ShellCache())
+//                }
+//            }
+//        )
+
+
+        hostConfiguration(
+            hostConfiguration().with {
+                jvm {
+                    baseClassLoader.replaceOnlyDefault(null)
+                    compilationCache(ShellCache())
+                }
+            }
+        )
+
         defaultImports(DependsOn::class, Repository::class, Import::class)
         defaultImports(*ESSENTIAL_KOTLIN_SHELL_CLASSES)
         defaultImports(*ESSENTIAL_KOTLIN_SHELL_IMPORTS)
         jvm {
+//            compilationCache(ShellCache())
             dependenciesFromClassContext(KotlinShellScriptConfiguration::class, "kotlin-shell-kts", "kotlin-stdlib", "kotlin-reflect")
         }
         refineConfiguration {
@@ -115,3 +145,26 @@ class KotlinShellScriptEvaluationConfiguration : ScriptEvaluationConfiguration (
         refineConfigurationBeforeEvaluate(::configureProvidedPropertiesFromJsr223Context)
     }
 )
+
+class ShellCache : CompiledJvmScriptsCache {
+
+    init {
+        println("init cache")
+    }
+
+    override fun get(
+        script: SourceCode,
+        scriptCompilationConfiguration: ScriptCompilationConfiguration
+    ): CompiledScript<*>? {
+        println("getting from cache")
+        return null
+    }
+
+    override fun store(
+        compiledScript: CompiledScript<*>,
+        script: SourceCode,
+        scriptCompilationConfiguration: ScriptCompilationConfiguration
+    ) {
+        println("storing in cache")
+    }
+}

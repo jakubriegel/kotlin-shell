@@ -25,6 +25,7 @@ dependencies {
     compileOnly(kotlin("stdlib-jdk8"))
     compileOnly(kotlin("reflect"))
     api(kotlin("main-kts"))
+    implementation(kotlin("scripting-compiler"))
 
     api(project(":kotlin-shell-core"))
     api("org.slf4j:slf4j-nop:1.7.26")
@@ -70,7 +71,7 @@ tasks {
     }
 
     shadowJar {
-        configureShadow("full")
+        configureShadow("all")
 
         dependencies {
             // stdlib
@@ -103,23 +104,23 @@ tasks {
         }
     }
 
-    val proguardJar by creating(ProGuardTask::class) {
-        group = "build"
-
-        dependsOn(shadowJar)
-        configuration("shell-kts.pro")
-
-        injars(mapOf("filter" to "!META-INF/versions/**"), shadowJar.get().outputs.files)
-
-        val outputJar = File("$buildDir/libs/$jarBaseName-$version-all.jar")
-
-        outjars(outputJar)
-
-        inputs.files(shadowJar.get().outputs.files.singleFile)
-        outputs.file(outputJar)
-
-        libraryjars(mapOf("filter" to "!META-INF/versions/**"), proguardLibraryJars)
-    }
+//    val proguardJar by creating(ProGuardTask::class) {
+//        group = "build"
+//
+//        dependsOn(shadowJar)
+//        configuration("shell-kts.pro")
+//
+//        injars(mapOf("filter" to "!META-INF/versions/**"), shadowJar.get().outputs.files)
+//
+//        val outputJar = File("$buildDir/libs/$jarBaseName-$version-all.jar")
+//
+//        outjars(outputJar)
+//
+//        inputs.files(shadowJar.get().outputs.files.singleFile)
+//        outputs.file(outputJar)
+//
+//        libraryjars(mapOf("filter" to "!META-INF/versions/**"), proguardLibraryJars)
+//    }
 }
 
 artifacts {
