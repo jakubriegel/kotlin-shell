@@ -112,9 +112,9 @@ interface ShellPipingThrough : ShellPipingTo {
      * Part of piping DSL
      */
     fun streamLambda(lambda: PipelineStreamLambda) = contextLambda { ctx ->
-        val inStream = ProcessChannelInputStream(ctx.stdin, this.commander.scope, PIPELINE_CHANNEL_BUFFER_SIZE)
-        val stdStream = ProcessChannelOutputStream(ctx.stdout, this.commander.scope, PIPELINE_CHANNEL_BUFFER_SIZE)
-        val errStream = ProcessChannelOutputStream(ctx.stderr, this.commander.scope, PIPELINE_CHANNEL_BUFFER_SIZE)
+        val inStream = ProcessChannelInputStream(ctx.stdin, scope, PIPELINE_CHANNEL_BUFFER_SIZE)
+        val stdStream = ProcessChannelOutputStream(ctx.stdout, scope, PIPELINE_CHANNEL_BUFFER_SIZE)
+        val errStream = ProcessChannelOutputStream(ctx.stderr, scope, PIPELINE_CHANNEL_BUFFER_SIZE)
         lambda(inStream, stdStream, errStream)
     }
 

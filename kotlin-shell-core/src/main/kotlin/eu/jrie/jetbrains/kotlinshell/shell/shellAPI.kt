@@ -2,7 +2,6 @@
 
 package eu.jrie.jetbrains.kotlinshell.shell
 
-import eu.jrie.jetbrains.kotlinshell.processes.ProcessCommander
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.coroutineScope
@@ -51,37 +50,15 @@ suspend fun shell(
     pipelineChannelBufferSize: Int = DEFAULT_PIPELINE_CHANNEL_BUFFER_SIZE,
     script: ShellScript
 ) {
-    shell(
-        env,
-        dir,
-        ProcessCommander(scope),
-        systemProcessInputStreamBufferSize,
-        pipelineRwPacketSize,
-        pipelineChannelBufferSize,
-        script
-    )
-    Shell.logger.debug("shell end")
-}
-
-@ExperimentalCoroutinesApi
-private suspend fun shell(
-    env: Map<String, String>? = null,
-    dir: File? = null,
-    commander: ProcessCommander,
-    systemProcessInputStreamBufferSize: Int,
-    pipelineRwPacketSize: Long,
-    pipelineChannelBufferSize: Int,
-    script: ShellScript
-) {
     Shell.build(
         env,
         dir,
-        commander,
+        scope,
         systemProcessInputStreamBufferSize,
         pipelineRwPacketSize,
         pipelineChannelBufferSize
     )
         .apply { script() }
         .finalize()
-    Shell.logger.debug("script end")
+    Shell.logger.debug("shell end")
 }

@@ -8,6 +8,7 @@ import eu.jrie.jetbrains.kotlinshell.processes.process.Process
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessChannelUnit
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessReceiveChannel
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
+import eu.jrie.jetbrains.kotlinshell.shell.ShellBase
 import eu.jrie.jetbrains.kotlinshell.shell.piping.ShellPiping
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -33,7 +34,7 @@ typealias PipelineContextLambda = suspend (context: ExecutionContext) -> Unit
  */
 @ExperimentalCoroutinesApi
 class Pipeline @TestOnly internal constructor (
-    private val context: ProcessExecutionContext,
+    private val shell: ShellBase,
     private val channelBufferSize: Int
 ) {
     /**
@@ -94,12 +95,12 @@ class Pipeline @TestOnly internal constructor (
      * @return this [Pipeline]
      */
     suspend fun throughLambda(end: Boolean = false, closeOut: Boolean = true, lambda: PipelineContextLambda) = apply {
-        addLambda(lambda, context.updated(newIn = lastOut), end, closeOut)
+        addLambda(lambda, shell.updated(newIn = lastOut), end, closeOut)
     }
 
     private suspend fun addLambda(
         lambda: PipelineContextLambda,
-        lambdaContext: PipelineExecutionContext = PipelineExecutionContext(context),
+        lambdaContext: PipelineExecutionContext = PipelineExecutionContext(shell),
         end: Boolean,
         closeOut: Boolean
     ) = ifNotEnded {
@@ -173,7 +174,7 @@ class Pipeline @TestOnly internal constructor (
      */
     suspend fun join() = apply {
         logger.debug("awaiting pipeline $this")
-        processLine.forEach { context.commander.awaitProcess(it) }
+        processLine.forEach { shell.commander.awaitProcess(it) }
         asyncJobs.forEach { it.join() }
         logger.debug("awaited pipeline $this")
     }
@@ -186,7 +187,7 @@ class Pipeline @TestOnly internal constructor (
      */
     suspend fun kill() = apply {
         logger.debug("killing pipeline $this")
-        processLine.forEach { context.commander.killProcess(it) }
+        processLine.forEach { shell.commander.killProcess(it) }
         asyncJobs.forEach { it.cancelAndJoin() }
         logger.debug("killed pipeline $this")
     }
@@ -197,7 +198,7 @@ class Pipeline @TestOnly internal constructor (
     private fun channel(): ProcessSendChannel = Channel<ProcessChannelUnit>(channelBufferSize).also { lastOut = it }
 
     private fun launch(block: suspend CoroutineScope.() -> Unit) {
-        asyncJobs.add(context.commander.scope.launch(block = block))
+        asyncJobs.add(shell.scope.launch(block = block))
     }
 
     private suspend fun ifNotEnded(block: suspend () -> Unit) {
@@ -214,8 +215,8 @@ class Pipeline @TestOnly internal constructor (
          * @see ShellPiping
          */
         internal suspend fun fromProcess(
-            process: ProcessExecutable, context: ProcessExecutionContext, channelBufferSize: Int
-        ) = Pipeline(context, channelBufferSize)
+            process: ProcessExecutable, shell: ShellBase, channelBufferSize: Int
+        ) = Pipeline(shell, channelBufferSize)
             .apply { addProcess(process) }
 
         /**
@@ -224,8 +225,8 @@ class Pipeline @TestOnly internal constructor (
          * @see ShellPiping
          */
         internal suspend fun fromLambda(
-            lambda: PipelineContextLambda, context: ProcessExecutionContext, channelBufferSize: Int
-        ) = Pipeline(context, channelBufferSize)
+            lambda: PipelineContextLambda, shell: ShellBase, channelBufferSize: Int
+        ) = Pipeline(shell, channelBufferSize)
             .apply { addLambda(lambda, end = false, closeOut = true) }
 
         /**
@@ -234,8 +235,8 @@ class Pipeline @TestOnly internal constructor (
          * @see ShellPiping
          */
         internal fun fromChannel(
-            channel: ProcessReceiveChannel, context: ProcessExecutionContext, channelBufferSize: Int
-        ) = Pipeline(context, channelBufferSize)
+            channel: ProcessReceiveChannel, shell: ShellBase, channelBufferSize: Int
+        ) = Pipeline(shell, channelBufferSize)
             .apply { lastOut = channel }
 
         private val logger = LoggerFactory.getLogger(Pipeline::class.java)

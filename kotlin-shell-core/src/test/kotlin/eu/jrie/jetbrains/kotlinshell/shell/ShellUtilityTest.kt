@@ -4,6 +4,7 @@ import eu.jrie.jetbrains.kotlinshell.processes.ProcessCommander
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessReceiveChannel
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
 import io.mockk.mockk
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import org.junit.jupiter.api.AfterEach
@@ -200,6 +201,7 @@ class ShellUtilityTest {
 
     @ExperimentalCoroutinesApi
     private class SampleShell : ShellUtility {
+        override val scope: CoroutineScope = mockk()
 
         internal var cdArg: File? = null
 

@@ -1,6 +1,5 @@
 package eu.jrie.jetbrains.kotlinshell.shell
 
-import eu.jrie.jetbrains.kotlinshell.processes.ProcessCommander
 import eu.jrie.jetbrains.kotlinshell.processes.execution.Executable
 import eu.jrie.jetbrains.kotlinshell.processes.execution.ProcessExecutable
 import eu.jrie.jetbrains.kotlinshell.processes.process.Process
@@ -53,7 +52,6 @@ fun script(scope: CoroutineScope, script: ScriptingShell.() -> Unit) {
  */
 @ExperimentalCoroutinesApi
 open class ScriptingShell internal constructor (
-    private val scope: CoroutineScope,
     private val shell: Shell
 ) {
 
@@ -65,11 +63,10 @@ open class ScriptingShell internal constructor (
         PIPELINE_CHANNEL_BUFFER_SIZE: Int,
         scope: CoroutineScope = GlobalScope
     ) : this(
-        scope,
         Shell.build(
             environment,
             directory,
-            ProcessCommander(scope),
+            scope,
             SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE,
             PIPELINE_RW_PACKET_SIZE,
             PIPELINE_CHANNEL_BUFFER_SIZE
@@ -136,5 +133,5 @@ open class ScriptingShell internal constructor (
         shell.shell(script = script)
     }
 
-    private fun <T> blocking(block: suspend () -> T) = runBlocking(scope.coroutineContext) { block() }
+    private fun <T> blocking(block: suspend () -> T) = runBlocking(shell.scope.coroutineContext) { block() }
 }

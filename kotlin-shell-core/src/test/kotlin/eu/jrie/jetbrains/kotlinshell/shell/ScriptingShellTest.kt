@@ -1,6 +1,5 @@
 package eu.jrie.jetbrains.kotlinshell.shell
 
-import eu.jrie.jetbrains.kotlinshell.processes.ProcessCommander
 import eu.jrie.jetbrains.kotlinshell.processes.execution.ProcessExecutable
 import eu.jrie.jetbrains.kotlinshell.processes.process.Process
 import eu.jrie.jetbrains.kotlinshell.shell.piping.PipeConfig
@@ -19,7 +18,7 @@ import java.io.File
 class ScriptingShellTest {
 
     private val shellSpy = spyk(
-        Shell.build(emptyMap(), File(System.getProperty("user.home")), ProcessCommander(GlobalScope), 16, 16, 16)
+        Shell.build(emptyMap(), File(System.getProperty("user.home")), GlobalScope, 16, 16, 16)
     ) {
         coEvery { systemProcess(ofType(String::class)) } returns mockk()
         coEvery { detach(*anyVararg()) } returns mockk()
@@ -31,7 +30,7 @@ class ScriptingShellTest {
         coEvery { pipeline(ExecutionMode.ATTACHED, any()) } returns mockk()
         coEvery { shell(script = any()) } returns mockk()
     }
-    private val scriptingShell = ScriptingShell(GlobalScope, shellSpy)
+    private val scriptingShell = ScriptingShell(shellSpy)
 
     @Test
     fun `should map String process to shell`() {

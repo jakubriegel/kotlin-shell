@@ -7,6 +7,7 @@ import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessChannel
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessReceiveChannel
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
 import io.mockk.mockk
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
@@ -140,6 +141,8 @@ class ShellPipingThroughTest {
     }
 
     private class SampleShell : ShellPipingThrough {
+        override val scope: CoroutineScope = mockk()
+
         override var environment: Map<String, String> = emptyMap()
         override var variables: Map<String, String> = emptyMap()
         override var directory: File = File("")

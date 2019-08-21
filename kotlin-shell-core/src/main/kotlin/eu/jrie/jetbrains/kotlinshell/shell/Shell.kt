@@ -10,6 +10,7 @@ import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessReceiveChannel
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
 import eu.jrie.jetbrains.kotlinshell.shell.piping.PipeConfig
 import eu.jrie.jetbrains.kotlinshell.shell.piping.ShellPiping
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -24,6 +25,7 @@ open class Shell protected constructor (
     environment: Map<String, String>,
     variables: Map<String, String>,
     directory: File,
+    final override val scope: CoroutineScope,
     final override val commander: ProcessCommander,
     final override val stdout: ProcessSendChannel,
     final override val stderr: ProcessSendChannel,
@@ -31,6 +33,24 @@ open class Shell protected constructor (
     final override val PIPELINE_RW_PACKET_SIZE: Long,
     final override val PIPELINE_CHANNEL_BUFFER_SIZE: Int
 ) : ShellPiping, ShellProcess, ShellUtility {
+
+    protected constructor (
+        environment: Map<String, String>,
+        variables: Map<String, String>,
+        directory: File,
+        scope: CoroutineScope,
+        stdout: ProcessSendChannel,
+        stderr: ProcessSendChannel,
+        SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE: Int,
+        PIPELINE_RW_PACKET_SIZE: Long,
+        PIPELINE_CHANNEL_BUFFER_SIZE: Int
+    ) : this(
+        environment, variables, directory,
+        scope, ProcessCommander(scope),
+        stdout, stderr, SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE, PIPELINE_RW_PACKET_SIZE, PIPELINE_CHANNEL_BUFFER_SIZE
+    )
+
+//    final override val commander = ProcessCommander(scope)
 
     final override val nullin: ProcessReceiveChannel = Channel<ProcessChannelUnit>().apply { close() }
     final override val nullout: ProcessSendChannel = NullSendChannel()
@@ -109,7 +129,7 @@ open class Shell protected constructor (
         .toMap()
 
     override suspend fun detach(executable: ProcessExecutable) = runProcess(executable) {
-        val job = commander.scope.launch { executable.join() }
+        val job = scope.launch { executable.join() }
         detachedProcessesJobs.add(Triple(nextDetachedIndex, it, job))
         logger.debug("detached $it")
     }
@@ -117,7 +137,7 @@ open class Shell protected constructor (
     override suspend fun detach(pipeConfig: PipeConfig) = this.pipeConfig()
         .apply { if (!closed) { toDefaultEndChannel(stdout) } }
         .also {
-            val job = commander.scope.launch { it.join() }
+            val job = scope.launch { it.join() }
             detachedPipelinesJobs.add(Triple(nextDetachedIndex, it, job))
             logger.debug("detached $it")
         }
@@ -180,7 +200,7 @@ open class Shell protected constructor (
         environment,
         vars,
         dir,
-        commander,
+        scope,
         stdout,
         stderr,
         SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE,
@@ -196,22 +216,22 @@ open class Shell protected constructor (
             environment: Map<String, String>,
             variables: Map<String, String>,
             directory: File,
-            commander: ProcessCommander,
+            scope: CoroutineScope,
             SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE: Int,
             PIPELINE_RW_PACKET_SIZE: Long,
             PIPELINE_CHANNEL_BUFFER_SIZE: Int
         ): Shell {
-            val stdout = initOut(commander)
+            val stdout = initOut(scope)
             return Shell(
                 environment, variables, directory,
-                commander, stdout.first, stdout.first,
+                scope, stdout.first, stdout.first,
                 SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE, PIPELINE_RW_PACKET_SIZE, PIPELINE_CHANNEL_BUFFER_SIZE
             ).apply { stdoutJob = stdout.second }
         }
 
-        private fun initOut(commander: ProcessCommander): Pair<ProcessSendChannel, Job> = Channel<ProcessChannelUnit>()
+        private fun initOut(scope: CoroutineScope): Pair<ProcessSendChannel, Job> = Channel<ProcessChannelUnit>()
             .run {
-                this to commander.scope.launch {
+                this to scope.launch {
                     consumeEach { p ->
                         System.out.writePacket(p)
                         System.out.flush()
@@ -222,7 +242,7 @@ open class Shell protected constructor (
         internal fun build(
             env: Map<String, String>?,
             dir: File?,
-            commander: ProcessCommander,
+            scope: CoroutineScope,
             systemProcessInputStreamBufferSize: Int,
             pipelineRwPacketSize: Long,
             pipelineChannelBufferSize: Int
@@ -231,7 +251,7 @@ open class Shell protected constructor (
                 env ?: emptyMap(),
                 emptyMap(),
                 assertDir(dir?.absoluteFile ?: currentDir()),
-                commander,
+                scope,
                 systemProcessInputStreamBufferSize,
                 pipelineRwPacketSize,
                 pipelineChannelBufferSize

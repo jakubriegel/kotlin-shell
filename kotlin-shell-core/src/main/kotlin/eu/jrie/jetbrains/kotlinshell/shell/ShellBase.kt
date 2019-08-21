@@ -4,6 +4,7 @@ package eu.jrie.jetbrains.kotlinshell.shell
 
 import eu.jrie.jetbrains.kotlinshell.processes.execution.ProcessExecutionContext
 import eu.jrie.jetbrains.kotlinshell.processes.pipeline.PipelineContextLambda
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.io.core.buildPacket
 import kotlinx.io.core.writeText
@@ -14,6 +15,12 @@ typealias ShellCommand = PipelineContextLambda//() -> String
 @Suppress("PropertyName")
 @ExperimentalCoroutinesApi
 interface ShellBase : ProcessExecutionContext {
+
+    /**
+     * [CoroutineScope] used by this shell, its members and sub shells
+     */
+    val scope: CoroutineScope
+
     /**
      * Environment of this shell.
      * These variables are being inherited to sub shells.

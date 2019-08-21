@@ -1,8 +1,6 @@
 package eu.jrie.jetbrains.kotlinshell.shell
 
-import eu.jrie.jetbrains.kotlinshell.processes.ProcessCommander
 import eu.jrie.jetbrains.kotlinshell.testutils.TestDataFactory.ENV_VAR_1
-import io.mockk.spyk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -88,7 +86,7 @@ class ShellTest {
     }
 
     private fun <T> runTest(test: suspend ShellTest.() -> T) = runBlocking {
-        shell = Shell.build(null, null, spyk(ProcessCommander(this)), 1, 1, 1)
+        shell = Shell.build(null, null, this, 1, 1, 1)
         val result = test()
         shell.finalize()
         result

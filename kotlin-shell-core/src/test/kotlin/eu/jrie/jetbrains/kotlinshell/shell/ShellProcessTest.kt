@@ -18,6 +18,7 @@ import io.mockk.mockkConstructor
 import io.mockk.runs
 import io.mockk.spyk
 import io.mockk.verify
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
@@ -387,6 +388,7 @@ class ShellProcessTest {
 
     @ExperimentalCoroutinesApi
     private class SampleShell : ShellProcess {
+        override val scope: CoroutineScope = mockk()
         override val detachedProcesses: List<Pair<Int, Process>> = emptyList()
         override val daemons: List<Process> = emptyList()
         override val nullin: ProcessReceiveChannel = Channel()

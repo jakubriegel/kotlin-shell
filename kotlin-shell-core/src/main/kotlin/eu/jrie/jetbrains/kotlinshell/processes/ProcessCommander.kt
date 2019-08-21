@@ -7,8 +7,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.slf4j.LoggerFactory
 
 @ExperimentalCoroutinesApi
-class ProcessCommander (
-    val scope: CoroutineScope
+class ProcessCommander internal constructor (
+    private val scope: CoroutineScope
 ) {
 
     internal val processes = mutableSetOf<Process>()
