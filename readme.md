@@ -1,7 +1,8 @@
 # Kotlin Shell
 
 ## about
-tba
+Kotlin Shell is a prototype library for performing shell programming in Kotlin and KotlinScript.
+It provides shell-like API which takes advantage of Kotlin high level possibilities.
 
 ## get and run
 ### library
@@ -22,7 +23,7 @@ Kotlin Shell features slf4j logging. To use it add logging implementation or NOP
 implementation("org.slf4j:slf4j-nop:1.7.26")
 ```
 ### scripting
-[![library](https://api.bintray.com/packages/jakubriegel/kotlin-shell/kotlin-shell-kts/images/download.svg) ](https://bintray.com/jakubriegel//kotlin-shell/kotlin-shell-kts/_latestVersion)
+[![scripting](https://api.bintray.com/packages/jakubriegel/kotlin-shell/kotlin-shell-kts/images/download.svg) ](https://bintray.com/jakubriegel//kotlin-shell/kotlin-shell-kts/_latestVersion)
 
 Kotlin Shell scripts have `sh.kts` extension.
 
@@ -40,7 +41,7 @@ To run the script type:
 ```
 kshell script.sh.kts
 ```
-To read more and download the command go [here](https://github.com/jakubriegel/kshell).
+Read more and download the command [here](https://github.com/jakubriegel/kshell).
 
 ##### shebang
 Kotlin Shell scripts support shebang:
@@ -50,8 +51,14 @@ Kotlin Shell scripts support shebang:
 
 #### `kotlinc` command
 A more low level approach is supported with `kotlinc`:
+
 ```
-tba
+kotlinc -cp PATH_TO_SHELL_KTS_ALL_JAR -Dkotlin.script.classpath  -script SCRIPT.sh.kts ARGS
+```
+
+example:
+```
+kotlinc -cp lib/kotlin-shell-kts-all.jar -Dkotlin.script.classpath  -script hello.sh.kts
 ```
 
 ## usage
@@ -123,17 +130,51 @@ scriptFile(arg1, arg2)
 ```
 
 ##### kts process
-tba
+_KotlinScript processes are not yet implemented_
 
 #### multiple calls
 To run equivalent process multiple times call `ProcessExecutable.copy()` 
 
 ### pipelines
-tba
+Pipelines can operate on processes, lambdas, files, strings, byte packages and streams.
 
 ### creating
+
+To create the pipeline line use `pipeline` block:
 ```kotlin
 pipeline { process1 pipe process2 pipe process3 }
+```
+
+Pipeline can be started with `Process`, lambda, `File`, `String`, `ByteReadPacket` or `InputStream`.
+
+### using lambdas
+Basic lambda structure for piping is `PipelineContextLambda`:
+```kotlin
+suspend (ExecutionContext) -> Unit
+```
+It takes context which consists of `stdin`, `stdout` and `stderr` channels. It can receince content immediately after it was emited by producer, as well as its consumer can receive sent content simultaneously. 
+
+The end of input is signalized with closed `stdin`. `PipelineContextLambda` shouldn't close outputs after execution.
+
+#### lambdas suitable for piping
+Most lambdas follow the template `(stdin) -> Pair<stdout, stderr>`
+
+name | definition | builder
+--- | --- | --- 
+`PipelineContextLambda` | suspend (ExecutionContext) -> Unit | contextLambda { /* code */ }
+`PipelinePacketLambda` | suspend (ByteReadPacket) -> Pair<ByteReadPacket, ByteReadPacket> | contextLambda { /* code */ }
+`PipelineByteArrayLambda` | suspend (ByteArray) -> Pair<ByteArray, ByteArray> | contextLambda { /* code */ } 
+`PipelineStringLambda` | suspend (String) -> Pair<String, String> | contextLambda { /* code */ }
+`PipelineStreamLambda` | suspend (InputStream, OutputStream, OutputStream) -> Unit | streamLambda { /* code */ }
+
+##### example
+```kotlin
+shell {
+    val upper = stringLambda { line ->
+        line.toUpperCase() to ""
+    }
+    pipeline { "cat file".process() pipe upper pipe file("result") }
+}
 ```
 
 ### detaching
@@ -189,11 +230,93 @@ To attach detached job (process or pipeline) use `fg()`:
 To join all detached jobs call `joinDetached()`
 
 ### shell commands
-tba
+Kotlin Shell implements some of the most popular shell commmands.
+
+To call the command use `invoke()`:
+```kotlin
+cmd()
+```
+then its output will be processed to `stdout`.
+
+To pipe the command put simply put it in the pipeline:
+```kotlin
+pipeline { cmd pipe process }
+```
+
+#### currenlty implemented commands
+* `&` as `detach`
+* `bg`
+* `cd` with `cd(up)` for `cd ..` and `cd(pre)` for `cd -`
+* `env`
+* `export`
+* `fg`
+* `jobs`
+* `mkdir`
+* `print` and `echo` as `print()`
+* `ps`
+* `set`
+* `unset`
+* setting shell variable as `variable`
+
+#### special properties
+`Shell` class memers provide more Kotlin-like access to popular parameters:
+* `detachedPipelines`
+* `detachedProcesses`
+* `directory`
+* `environment`
+* `nullin`
+* `nullout`
+* `processes`
+* `systemEnv`
+* `variables`
 
 ### sub shells
-tba
+To create sub shell use `shell` block:
+```koltin
+shell {
+    /* code */
+    shell {
+        /* code */
+    }
+}
+```
+
+By default sub shell will inherit environment, directory, IO streams and constants. You can explicitly specify shell variables and directory to use:
+```kotlin
+shell {
+    shell (
+        vars = mapOfVariables,
+        dir = directoryAsFile
+    ) {
+        /* code */
+    }
+}
+```
+
+Sub shells suspend execution of parent shell.
+
+### dependencies
+Kotlin Shell scripts support adding dependencies
+
+Kotlin Shell uses dependencies mechanism from `kotlin-main-kts`.
+
+#### external
+External dependencies from maven repositories can be added via `@file:Repository` `@file:DependsOn` annotation: 
+```kotlin
+@file:Repository("MAVEN_REPOSITORY_URL")
+@file:DependsOn("GROUP:PACKAGE:VERSION")
+```
+then they can be imported with standatd `import` statement.
+
+#### internal
+To import something from local file use `@file:Import`:
+```kotlin
+@file:Import("SCRIPT.sh.kts")
+```
+then they can be imported with standatd `import` statement.
+
 
 ## examples
 Examples on writing Kotlin shell scripts can be found in [examples repository](https://github.com/jakubriegel/kotlin-shell-examples).
+
 A good source of detailed examples are also integration tests in this repository.
