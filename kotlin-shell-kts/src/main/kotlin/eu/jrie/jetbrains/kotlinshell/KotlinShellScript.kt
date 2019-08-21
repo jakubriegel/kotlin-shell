@@ -69,7 +69,7 @@ class KotlinShellScriptConfiguration : ScriptCompilationConfiguration (
         defaultImports(*ESSENTIAL_KOTLIN_SHELL_CLASSES)
         defaultImports(*ESSENTIAL_KOTLIN_SHELL_IMPORTS)
         jvm {
-            dependenciesFromClassContext(KotlinShellScriptConfiguration::class, "kotlin-main-kts", "kotlin-stdlib", "kotlin-reflect")
+            dependenciesFromClassContext(KotlinShellScriptConfiguration::class, "kotlin-shell-kts", "kotlin-stdlib", "kotlin-reflect")
         }
         refineConfiguration {
             onAnnotations(DependsOn::class, Repository::class, Import::class, handler = MainKtsConfigurator())
