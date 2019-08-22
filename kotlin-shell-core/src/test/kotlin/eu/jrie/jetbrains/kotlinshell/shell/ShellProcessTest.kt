@@ -394,6 +394,8 @@ class ShellProcessTest {
         override fun variable(variable: Pair<String, String>) = Unit
         override fun export(env: Pair<String, String>) = Unit
         override fun unset(key: String) = Unit
+        override fun Readonly.variable(variable: Pair<String, String>) = Unit
+        override fun Readonly.export(env: Pair<String, String>) = Unit
 
         override val scope: CoroutineScope = mockk()
         override val detachedProcesses: List<Pair<Int, Process>> = emptyList()

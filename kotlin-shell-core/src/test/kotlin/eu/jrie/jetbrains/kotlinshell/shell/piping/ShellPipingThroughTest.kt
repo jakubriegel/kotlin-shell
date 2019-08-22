@@ -6,6 +6,7 @@ import eu.jrie.jetbrains.kotlinshell.processes.pipeline.PipelineContextLambda
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessChannel
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessReceiveChannel
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
+import eu.jrie.jetbrains.kotlinshell.shell.Readonly
 import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.DEFAULT_PIPELINE_CHANNEL_BUFFER_SIZE
 import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.PIPELINE_CHANNEL_BUFFER_SIZE
 import io.mockk.mockk
@@ -147,6 +148,8 @@ class ShellPipingThroughTest {
         override fun variable(variable: Pair<String, String>) = Unit
         override fun export(env: Pair<String, String>) = Unit
         override fun unset(key: String) = Unit
+        override fun Readonly.variable(variable: Pair<String, String>) = Unit
+        override fun Readonly.export(env: Pair<String, String>) = Unit
 
         override val scope: CoroutineScope = mockk()
 

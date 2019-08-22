@@ -61,6 +61,8 @@ open class Shell protected constructor (
     final override var variables: Map<String, String> = variables
         private set
 
+    private val readOnlyEnvironment: MutableMap<String, String> = mutableMapOf()
+
     final override var directory: File = directory
         private set
 
@@ -82,6 +84,12 @@ open class Shell protected constructor (
 
     private val detachedPipelinesJobs = mutableListOf<Triple<Int, Pipeline, Job>>()
 
+    /**
+     * List of detached jobs
+     *
+     * @see detachedPipelines
+     * @see detachedProcesses
+     */
     val jobs: ShellCommand get() = command {
         fun line(index: Int, name: String) = "[$index] $name\n"
         StringBuilder().let { b ->
@@ -117,21 +125,35 @@ open class Shell protected constructor (
     }
 
     override fun variable(variable: Pair<String, String>) {
-        variables = variables.plus(variable)
+        if (readOnlyEnvironment.containsKey(variable.first)) throw Exception("read-only variable: ${variable.first}")
+        else {
+            if (environment.containsKey(variable.first)) export(variable)
+            else variables = variables.plus(variable)
+        }
+    }
+
+    override fun Readonly.variable(variable: Pair<String, String>) {
+        this@Shell.variable(variable)
+        readOnlyEnvironment[variable.first] = variable.second
     }
 
     override fun export(env: Pair<String, String>) {
-        environment = environment.plus(env)
+        if (readOnlyEnvironment.containsKey(env.first)) println("readonly variable")
+        else {
+            variables = variables.minus(env.first)
+            environment = environment.plus(env)
+        }
+    }
+
+    override fun Readonly.export(env: Pair<String, String>) {
+        this@Shell.export(env)
+        readOnlyEnvironment[env.first] = env.second
     }
 
     override fun unset(key: String) {
-        variables = variables.without(key)
-        environment = environment.without(key)
+        variables = variables.minus(key)
+        environment = environment.minus(key)
     }
-
-    private fun Map<String, String>.without(key: String) = toMutableMap()
-        .apply { remove(key) }
-        .toMap()
 
     override suspend fun detach(executable: ProcessExecutable) = runProcess(executable) {
         val job = scope.launch { executable.join() }
@@ -209,6 +231,7 @@ open class Shell protected constructor (
         stdout,
         stderr
     )
+        .also { it.readOnlyEnvironment.putAll(readOnlyEnvironment) }
         .apply { script() }
         .finalizeDetached()
 

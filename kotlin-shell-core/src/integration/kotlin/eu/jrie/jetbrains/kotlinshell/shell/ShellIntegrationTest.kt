@@ -244,6 +244,21 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
     }
 
     @Test
+    fun `should add readonly environment variable`() {
+        // given
+        val variable = "VARIABLE"
+        val value = "value"
+
+        // when
+        assertThrows<Exception> {
+            shell {
+                readonly export (variable to value)
+                shell { variable(variable to "other") }
+            }
+        }
+    }
+
+    @Test
     fun `should add shell variable`() {
         // given
         val variable = "VARIABLE"
@@ -264,6 +279,21 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
 
         // then
         assertEquals("$value\n", readResult())
+    }
+
+    @Test
+    fun `should add readonly shell variable`() {
+        // given
+        val variable = "VARIABLE"
+        val value = "value"
+
+        // when
+        assertThrows<Exception> {
+            shell {
+                readonly variable (variable to value)
+                variable(variable to "other")
+            }
+        }
     }
 
     @Test

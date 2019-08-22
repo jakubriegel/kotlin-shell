@@ -213,6 +213,8 @@ class ShellUtilityTest {
         override fun variable(variable: Pair<String, String>) {}
         override fun export(env: Pair<String, String>) {}
         override fun unset(key: String) {}
+        override fun Readonly.variable(variable: Pair<String, String>) = Unit
+        override fun Readonly.export(env: Pair<String, String>) = Unit
 
         override var environment: Map<String, String> = emptyMap()
         override var variables: Map<String, String> = emptyMap()
