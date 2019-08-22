@@ -9,11 +9,12 @@ import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessBuilder
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessReceiveChannel
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessState
+import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import java.io.File
 
 @ExperimentalCoroutinesApi
-interface ShellProcess : ShellBase {
+interface ShellProcess : ShellUtility {
 
     /**
      * All processes
@@ -23,14 +24,25 @@ interface ShellProcess : ShellBase {
     /**
      * List of detached processes
      */
-    val detached: List<Process>
+    val detachedProcesses: List<Pair<Int, Process>>
 
     /**
      * List of daemon processes
      */
     val daemons: List<Process>
 
+    /**
+     * Dummy input channel. Behaves like `/dev/null`.
+     *
+     * @see nullout
+     */
     val nullin: ProcessReceiveChannel
+
+    /**
+     * Dummy output channel. Behaves like `/dev/null`.
+     *
+     * @see nullout
+     */
     val nullout: ProcessSendChannel
 
     /**
@@ -43,7 +55,9 @@ interface ShellProcess : ShellBase {
      */
     fun systemBuilder(config: SystemProcessConfiguration.() -> Unit) = SystemProcessConfiguration()
         .apply(config)
-        .apply { systemProcessInputStreamBufferSize = SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE }
+        .apply {
+            systemProcessInputStreamBufferSize = this@ShellProcess.env(SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE).toInt()
+        }
         .configureBuilder()
 
     /**
@@ -114,53 +128,84 @@ interface ShellProcess : ShellBase {
         return builder()
     }
 
-    suspend fun detach(process: ProcessExecutable)
+    /**
+     * Detaches process from the shell and executes it in the background
+     *
+     * @return detached [Process]
+     */
+    suspend fun detach(executable: ProcessExecutable): Process
 
-    suspend fun detach(vararg process: ProcessExecutable) = process.forEach { detach(it) }
+    /**
+     * Detaches processes from the shell and executes it in the background
+     *
+     * @return list of detached [Process]
+     */
+    suspend fun detach(vararg process: ProcessExecutable) = process.map { detach(it) }
 
+    /**
+     * Joins all detached processes
+     */
     suspend fun joinDetached()
 
-    val jobs: ShellExecutable get() = exec {
-        StringBuilder().let {
-            detached.forEachIndexed { i, p -> it.append("[${i+1}] ${p.name}") }
-            it.toString()
-        }
-    }
-
-    suspend fun fg(index: Int = 1) = fg(detached[index-1])
-
+    /**
+     * Attaches selected [Process]
+     */
     suspend fun fg(process: Process)
 
-    suspend fun daemon(executable: ProcessExecutable)
+    suspend fun daemon(executable: ProcessExecutable): Process
 
-    suspend fun daemon(vararg executable: ProcessExecutable) = executable.forEach { daemon(it) }
+    suspend fun daemon(vararg executable: ProcessExecutable) = executable.map { daemon(it) }
 
+    /**
+     * Joins the [Process]
+     */
     suspend fun Process.join() = commander.awaitProcess(this)
 
+    /**
+     * Joins given processes
+     */
     suspend fun join(vararg process: Process) = process.forEach { it.join() }
 
+    /**
+     * Joins all running processes
+     */
     suspend fun joinAll() = commander.awaitAll()
 
+    /**
+     * Kill the [Process]
+     */
     suspend fun Process.kill() = kill(this)
 
+    /**
+     * Kills given processes
+     */
     suspend fun kill(vararg process: Process) = process.forEach { killProcess(it) }
 
     private suspend fun killProcess(process: Process) = commander.killProcess(process)
 
+    /**
+     * Kills all running processes
+     */
     suspend fun killAll() = commander.killAll()
 
-    suspend operator fun ProcessExecutable.invoke(mode: ExecutionMode = ExecutionMode.ATTACHED) {
+    /**
+     * Starts the [Process] in given [ExecutionMode]
+     *
+     * @return started [Process]
+     */
+    suspend operator fun ProcessExecutable.invoke(mode: ExecutionMode = ExecutionMode.ATTACHED): Process {
         when (mode) {
             ExecutionMode.ATTACHED -> this()
             ExecutionMode.DETACHED -> this@ShellProcess.detach(this)
             ExecutionMode.DAEMON -> this@ShellProcess.daemon(this)
         }
+        return process
     }
 
     /**
      * Retrieves all process data
      */
-    val ps: ShellExecutable get() = exec { commander.status() }
+    val ps: ShellCommand get() = command { commander.status() }
 
     /**
      * Retrieves [Process] by its vPID

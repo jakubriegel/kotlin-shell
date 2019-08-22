@@ -1,6 +1,5 @@
 package eu.jrie.jetbrains.kotlinshell.shell
 
-import eu.jrie.jetbrains.kotlinshell.processes.ProcessCommander
 import eu.jrie.jetbrains.kotlinshell.processes.execution.Executable
 import eu.jrie.jetbrains.kotlinshell.processes.execution.ProcessExecutable
 import eu.jrie.jetbrains.kotlinshell.processes.process.Process
@@ -20,10 +19,7 @@ import java.io.File
 fun script(script: ScriptingShell.() -> Unit) {
     ScriptingShell(
         emptyMap(),
-        File(System.getProperty("user.dir")),
-        DEFAULT_SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE,
-        DEFAULT_PIPELINE_RW_PACKET_SIZE,
-        DEFAULT_PIPELINE_CHANNEL_BUFFER_SIZE
+        File(System.getProperty("user.dir"))
     ).script()
 }
 
@@ -37,9 +33,6 @@ fun script(scope: CoroutineScope, script: ScriptingShell.() -> Unit) {
     ScriptingShell(
         emptyMap(),
         File(System.getProperty("user.dir")),
-        DEFAULT_SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE,
-        DEFAULT_PIPELINE_RW_PACKET_SIZE,
-        DEFAULT_PIPELINE_CHANNEL_BUFFER_SIZE,
         scope
     ).script()
 }
@@ -53,26 +46,18 @@ fun script(scope: CoroutineScope, script: ScriptingShell.() -> Unit) {
  */
 @ExperimentalCoroutinesApi
 open class ScriptingShell internal constructor (
-    private val scope: CoroutineScope,
     private val shell: Shell
 ) {
 
     constructor(
         environment: Map<String, String>,
         directory: File,
-        SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE: Int,
-        PIPELINE_RW_PACKET_SIZE: Long,
-        PIPELINE_CHANNEL_BUFFER_SIZE: Int,
         scope: CoroutineScope = GlobalScope
     ) : this(
-        scope,
         Shell.build(
             environment,
             directory,
-            ProcessCommander(scope),
-            SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE,
-            PIPELINE_RW_PACKET_SIZE,
-            PIPELINE_CHANNEL_BUFFER_SIZE
+            scope
         )
     )
 
@@ -136,5 +121,5 @@ open class ScriptingShell internal constructor (
         shell.shell(script = script)
     }
 
-    private fun <T> blocking(block: suspend () -> T) = runBlocking(scope.coroutineContext) { block() }
+    private fun <T> blocking(block: suspend () -> T) = runBlocking(shell.scope.coroutineContext) { block() }
 }

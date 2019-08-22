@@ -2,7 +2,7 @@ package eu.jrie.jetbrains.kotlinshell.shell.piping
 
 import eu.jrie.jetbrains.kotlinshell.processes.pipeline.Pipeline
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
-import eu.jrie.jetbrains.kotlinshell.shell.ShellBase
+import eu.jrie.jetbrains.kotlinshell.shell.ShellUtility
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.io.core.BytePacketBuilder
 import java.io.File
@@ -10,7 +10,7 @@ import java.io.FileOutputStream
 import java.io.OutputStream
 
 @ExperimentalCoroutinesApi
-interface ShellPipingTo : ShellBase {
+interface ShellPipingTo : ShellUtility {
     /**
      * Ends this [Pipeline] with [channel]
      * Part of piping DSL

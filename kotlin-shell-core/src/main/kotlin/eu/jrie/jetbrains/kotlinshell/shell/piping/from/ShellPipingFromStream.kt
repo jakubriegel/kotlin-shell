@@ -4,6 +4,7 @@ import eu.jrie.jetbrains.kotlinshell.processes.execution.ProcessExecutable
 import eu.jrie.jetbrains.kotlinshell.processes.pipeline.Pipeline
 import eu.jrie.jetbrains.kotlinshell.processes.pipeline.PipelineContextLambda
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
+import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.PIPELINE_RW_PACKET_SIZE
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.io.core.BytePacketBuilder
 import kotlinx.io.streams.readPacketAtMost
@@ -31,11 +32,12 @@ interface ShellPipingFromStream : ShellPipingFromLambda {
     suspend fun fromUse(stream: InputStream) = from(stream.useFully())
 
     private fun InputStream.readFully() = contextLambda {
+        val size = env(PIPELINE_RW_PACKET_SIZE).toLong()
         try {
             do {
-                val packet = readPacketAtMost(PIPELINE_RW_PACKET_SIZE)
+                val packet = readPacketAtMost(size)
                 it.stdout.send(packet)
-            } while (packet.remaining == PIPELINE_RW_PACKET_SIZE)
+            } while (packet.remaining == size)
         } catch (e: EOFException) {}
     }
 

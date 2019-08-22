@@ -1,6 +1,6 @@
 import com.jfrog.bintray.gradle.BintrayExtension
+import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm")
@@ -16,13 +16,12 @@ dependencies {
     api("org.zeroturnaround:zt-exec:1.11")
     api("org.slf4j:slf4j-api:1.7.26")
 
-    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0-M2")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0-RC2")
     api("org.jetbrains.kotlinx:kotlinx-io-jvm:0.1.11")
 
     testImplementation(kotlin("reflect"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.5.0")
     testImplementation("io.mockk:mockk:1.9.3")
-    testImplementation("org.apache.logging.log4j:log4j-core:2.12.0")
     testImplementation("org.apache.logging.log4j:log4j-slf4j-impl:2.12.0")
 }
 
@@ -46,35 +45,21 @@ val integration by tasks.creating(Test::class) {
     useJUnitPlatform()
 }
 
-val dokkaJar by tasks.creating(Jar::class) {
-    group = JavaBasePlugin.DOCUMENTATION_GROUP
-    classifier = "javadoc"
-    description = "Assembles Kotlin docs with Dokka"
-    from(tasks.dokka)
-}
+val dokkaJarConfig: (task: TaskProvider<DokkaTask>) ->  Jar.() -> Unit by rootProject.extra
+val dokkaJar by tasks.creating(Jar::class, dokkaJarConfig(tasks.dokka))
 
-val sourcesJar by tasks.creating(Jar::class) {
-    dependsOn(JavaPlugin.CLASSES_TASK_NAME)
-    classifier = "sources"
-    from(sourceSets["main"].allSource)
-}
+val sourcesJarConfig: Jar.() -> Unit by rootProject.extra
+val sourcesJar by tasks.creating(Jar::class, sourcesJarConfig)
 
 tasks {
-    withType<KotlinCompile> {
-        kotlinOptions.jvmTarget = "1.8"
-    }
-
     withType<Test> {
         useJUnitPlatform()
     }
 
     check { dependsOn(integration) }
 
-    dokka {
-        outputFormat = "html"
-        outputDirectory = "$buildDir/javadoc"
-        noStdlibLink = true
-    }
+    val dokkaConfig: DokkaTask.() -> Unit by rootProject.extra
+    dokka(dokkaConfig)
 }
 
 artifacts {
@@ -85,33 +70,19 @@ artifacts {
 
 val bintrayPublication = "kotlin-shell-core"
 
-publishing {
-    publications {
-        create<MavenPublication>(bintrayPublication) {
-            from(components["kotlin"])
-            groupId = project.group.toString()
-            artifactId = project.name
-            version = project.version.toString()
-            setArtifacts(listOf(sourcesJar, dokkaJar, tasks.jar.get()))
-        }
-    }
-}
+val publicationConfig: (Project, String, List<Jar>) -> Action<PublishingExtension> by rootProject.extra
+publishing(
+    publicationConfig(
+        project,
+        bintrayPublication,
+        listOf(tasks.jar.get(), sourcesJar, dokkaJar)
+    )
+)
 
-bintray {
-    user = System.getenv("BINTRAY_USER")
-    key = System.getenv("BINTRAY_KEY")
-    setPublications(bintrayPublication)
-    publish = true
-    pkg (delegateClosureOf<BintrayExtension.PackageConfig> {
-        repo = "kotlin-shell"
-        name = "kotlin-shell-core"
-        userOrg = "jakubriegel"
-        websiteUrl = ""
-        githubRepo = "jakubriegel/kotlin-shell"
-        vcsUrl = "https://github.com/jakubriegel/kotlin-shell"
-        description = "Library for performing shell-like programing in Kotlin"
-        setLabels("kotlin", "shell", "pipeline", "process-management")
-        setLicenses("apache2")
-        desc = description
-    })
-}
+val uploadConfig: (String, String) -> Action<BintrayExtension> by rootProject.extra
+bintray(
+    uploadConfig(
+        bintrayPublication,
+        "Library for performing shell-like programing in Kotlin"
+    )
+)

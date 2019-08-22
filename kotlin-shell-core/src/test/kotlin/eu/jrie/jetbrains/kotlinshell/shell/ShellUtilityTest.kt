@@ -4,6 +4,7 @@ import eu.jrie.jetbrains.kotlinshell.processes.ProcessCommander
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessReceiveChannel
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
 import io.mockk.mockk
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import org.junit.jupiter.api.AfterEach
@@ -200,6 +201,7 @@ class ShellUtilityTest {
 
     @ExperimentalCoroutinesApi
     private class SampleShell : ShellUtility {
+        override val scope: CoroutineScope = mockk()
 
         internal var cdArg: File? = null
 
@@ -211,6 +213,8 @@ class ShellUtilityTest {
         override fun variable(variable: Pair<String, String>) {}
         override fun export(env: Pair<String, String>) {}
         override fun unset(key: String) {}
+        override fun Readonly.variable(variable: Pair<String, String>) = Unit
+        override fun Readonly.export(env: Pair<String, String>) = Unit
 
         override var environment: Map<String, String> = emptyMap()
         override var variables: Map<String, String> = emptyMap()
@@ -222,11 +226,5 @@ class ShellUtilityTest {
         override val stdin: ProcessReceiveChannel = Channel()
 
         override suspend fun finalize() {}
-
-        override fun exec(block: Shell.() -> String): ShellExecutable = mockk()
-
-        override val SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE: Int = 1
-        override val PIPELINE_RW_PACKET_SIZE: Long = 1
-        override val PIPELINE_CHANNEL_BUFFER_SIZE: Int = 1
     }
 }

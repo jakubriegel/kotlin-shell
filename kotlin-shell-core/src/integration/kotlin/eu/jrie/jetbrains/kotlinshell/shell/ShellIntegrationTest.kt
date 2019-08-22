@@ -1,8 +1,10 @@
 package eu.jrie.jetbrains.kotlinshell.shell
 
 import eu.jrie.jetbrains.kotlinshell.ProcessBaseIntegrationTest
+import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -19,7 +21,7 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
 
         // when
         shell (
-            dir = givenDir
+            testDir = givenDir
         ) {
             pipeline { "ls".process() pipe storeResult }
             pwd = env("PWD")
@@ -55,7 +57,7 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
 
         // when
         shell (
-            env = env
+            testEnv = env
         ) {
             "chmod +x ${file.name}"()
             "./${file.name}".process() pipe storeResult
@@ -74,7 +76,7 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
 
         // when
         shell (
-            env = env
+            testEnv = env
         ) {
             val echo = systemProcess { cmd { "echo" withArg env(variable) } }
             echo pipe storeResult
@@ -109,7 +111,7 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
 
         // when
         shell (
-            dir = givenDir
+            testDir = givenDir
         ) {
             shell (dir = subDir) {
                 "ls".process() pipe storeResult
@@ -121,26 +123,26 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
     }
 
     @Test
-    fun `should create sub shell with new environment`() {
+    fun `should create sub shell with new variables`() {
         // given
         val variable = "VARIABLE"
         val value = "value"
         val newValue = "newValue"
         val env = mapOf(variable to value)
-        val newEnv = mapOf(variable to newValue)
+        val newVars = mapOf(variable to newValue)
 
         val code = "echo \$$variable"
         val file = testFile(content = code)
 
         // when
         shell (
-            env = env
+            testEnv = env
         ) {
 
             "chmod +x ${file.name}"()
 
             shell (
-                env = newEnv
+                vars = newVars
             ) {
                 "./${file.name}".process() pipe storeResult
             }
@@ -162,7 +164,7 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
 
         // when
         shell (
-            env = env
+            testEnv = env
         ) {
 
             "chmod +x ${file.name}"()
@@ -174,6 +176,26 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
 
         // then
         assertEquals("$value\n", readResult())
+    }
+
+    @Test
+    fun `should create sub shell with inherited stdout and stderr`() {
+        // given
+        var fatherOut: ProcessSendChannel? = null
+        var childOut: ProcessSendChannel? = null
+
+        // when
+        shell {
+            fatherOut = stdout
+            shell {
+                childOut = stdout
+            }
+        }
+
+        // then
+        assertNotEquals(null, fatherOut)
+        assertNotEquals(null, childOut)
+        assertEquals(fatherOut, childOut)
     }
 
     @Test
@@ -222,6 +244,21 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
     }
 
     @Test
+    fun `should add readonly environment variable`() {
+        // given
+        val variable = "VARIABLE"
+        val value = "value"
+
+        // when
+        assertThrows<Exception> {
+            shell {
+                readonly export (variable to value)
+                shell { variable(variable to "other") }
+            }
+        }
+    }
+
+    @Test
     fun `should add shell variable`() {
         // given
         val variable = "VARIABLE"
@@ -245,11 +282,61 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
     }
 
     @Test
+    fun `should add readonly shell variable`() {
+        // given
+        val variable = "VARIABLE"
+        val value = "value"
+
+        // when
+        assertThrows<Exception> {
+            shell {
+                readonly variable (variable to value)
+                variable(variable to "other")
+            }
+        }
+    }
+
+    @Test
     fun `should throw exception when given dir is not directory`() {
         assertThrows<AssertionError> {
             shell (
-                dir = testFile()
+                testDir = testFile()
             ) {  }
         }
+    }
+
+    @Test
+    fun `should set constants to default`() {
+        // when
+        shell {
+            assertEquals(env("SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE"), "${ShellBase.DEFAULT_SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE}")
+            assertEquals(env("PIPELINE_CHANNEL_BUFFER_SIZE"), "${ShellBase.DEFAULT_PIPELINE_CHANNEL_BUFFER_SIZE}")
+            assertEquals(env("PIPELINE_RW_PACKET_SIZE"), "${ShellBase.DEFAULT_PIPELINE_RW_PACKET_SIZE}")
+        }
+
+    }
+
+    @Test
+    fun `should set constants based on given environment`() {
+        // given
+        val systemProcessInputStreamBufferSize = 1
+        val pipelineChannelBufferSize = 2
+        val pipelineRWPacketSize = 3
+
+        val env = mapOf(
+            "SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE" to "$systemProcessInputStreamBufferSize",
+            "PIPELINE_CHANNEL_BUFFER_SIZE" to "$pipelineChannelBufferSize",
+            "PIPELINE_RW_PACKET_SIZE" to "$pipelineRWPacketSize"
+        )
+
+        // when
+        shell (
+            testEnv = env
+        ) {
+            assertEquals(env("SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE"), "$systemProcessInputStreamBufferSize")
+            assertEquals(env("PIPELINE_CHANNEL_BUFFER_SIZE"), "$pipelineChannelBufferSize")
+            assertEquals(env("PIPELINE_RW_PACKET_SIZE"), "$pipelineRWPacketSize")
+        }
+
     }
 }

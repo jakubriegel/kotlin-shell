@@ -5,6 +5,7 @@ import eu.jrie.jetbrains.kotlinshell.processes.execution.ProcessExecutionContext
 import eu.jrie.jetbrains.kotlinshell.processes.process.Process
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessChannel
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessReceiveChannel
+import eu.jrie.jetbrains.kotlinshell.shell.ShellProcess
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.confirmVerified
@@ -29,7 +30,7 @@ import java.io.OutputStream
 @ExperimentalCoroutinesApi
 class PipelineTest {
 
-    private lateinit var contextMock: ProcessExecutionContext
+    private lateinit var shellMock: ShellProcess
 
     companion object {
         private const val RW_PACKET_SIZE: Long = 4
@@ -44,7 +45,7 @@ class PipelineTest {
 
         // when
         val pipeline = runTest {
-            Pipeline.fromProcess(executableMock, contextMock,  CHANNEL_BUFFER_SIZE)
+            Pipeline.fromProcess(executableMock, shellMock,  CHANNEL_BUFFER_SIZE)
         }
 
         // then
@@ -72,15 +73,15 @@ class PipelineTest {
 
         // when
         val pipeline = runTest {
-            Pipeline.fromLambda(lambda, contextMock,  CHANNEL_BUFFER_SIZE)
+            Pipeline.fromLambda(lambda, shellMock,  CHANNEL_BUFFER_SIZE)
         }
 
         // then
         verify {
-            contextMock.stdin
-            contextMock.stdout
-            contextMock.stderr
-            contextMock.commander
+            shellMock.stdin
+            shellMock.stdout
+            shellMock.stderr
+            shellMock.commander
         }
 
         assertTrue(started!!)
@@ -95,12 +96,12 @@ class PipelineTest {
 
         // when
         val pipeline = runTest {
-            Pipeline.fromChannel(channel, contextMock,  CHANNEL_BUFFER_SIZE)
+            Pipeline.fromChannel(channel, shellMock,  CHANNEL_BUFFER_SIZE)
         }
 
         // then
         confirmVerified(channel)
-        confirmVerified(contextMock)
+        confirmVerified(shellMock)
 
         assertIterableEquals(emptyList<Process>(), pipeline.processes)
         assertFalse(pipeline.closed)
@@ -114,7 +115,7 @@ class PipelineTest {
 
         // when
         val pipeline = runTest {
-            Pipeline.fromProcess(processExecutableSpy(), contextMock,  CHANNEL_BUFFER_SIZE)
+            Pipeline.fromProcess(processExecutableSpy(), shellMock,  CHANNEL_BUFFER_SIZE)
                 .throughProcess(executableMock)
         }
 
@@ -145,15 +146,15 @@ class PipelineTest {
 
         // when
         val pipeline = runTest {
-            Pipeline.fromProcess(processExecutableSpy(), contextMock,  CHANNEL_BUFFER_SIZE)
+            Pipeline.fromProcess(processExecutableSpy(), shellMock,  CHANNEL_BUFFER_SIZE)
                 .throughLambda(lambda = lambda).apply { join() }
         }
 
         // then
         verify {
-            contextMock.stdout
-            contextMock.stderr
-            contextMock.commander
+            shellMock.stdout
+            shellMock.stderr
+            shellMock.commander
         }
 
         assertTrue(started!!)
@@ -168,7 +169,7 @@ class PipelineTest {
 
         // when
         val pipeline = runTest {
-            Pipeline.fromProcess(processExecutableSpy(), contextMock,  CHANNEL_BUFFER_SIZE)
+            Pipeline.fromProcess(processExecutableSpy(), shellMock,  CHANNEL_BUFFER_SIZE)
                 .toEndChannel(channel)
         }
 
@@ -177,11 +178,12 @@ class PipelineTest {
         confirmVerified(channel)
 
         verify {
-            contextMock.stdout
-            contextMock.stderr
-            contextMock.commander
+            shellMock.stdout
+            shellMock.stderr
+            shellMock.commander
+            shellMock.scope
         }
-        confirmVerified(contextMock)
+        confirmVerified(shellMock)
 
         assertEquals(1, pipeline.processes.size)
         assertTrue(pipeline.closed)
@@ -194,7 +196,7 @@ class PipelineTest {
 
         // when
         val pipeline = runTest {
-            Pipeline.fromProcess(processExecutableSpy(), contextMock,  CHANNEL_BUFFER_SIZE)
+            Pipeline.fromProcess(processExecutableSpy(), shellMock,  CHANNEL_BUFFER_SIZE)
                 .toDefaultEndChannel(channel)
         }
 
@@ -202,11 +204,12 @@ class PipelineTest {
         confirmVerified(channel)
 
         verify {
-            contextMock.stdout
-            contextMock.stderr
-            contextMock.commander
+            shellMock.stdout
+            shellMock.stderr
+            shellMock.commander
+            shellMock.scope
         }
-        confirmVerified(contextMock)
+        confirmVerified(shellMock)
 
         assertEquals(1, pipeline.processes.size)
         assertTrue(pipeline.closed)
@@ -219,17 +222,18 @@ class PipelineTest {
 
         // when
         val pipeline = runTest {
-            Pipeline.fromProcess(processExecutableSpy(), contextMock,  CHANNEL_BUFFER_SIZE)
+            Pipeline.fromProcess(processExecutableSpy(), shellMock,  CHANNEL_BUFFER_SIZE)
                 .toEndPacket(builder)
         }
 
         // then
         verify {
-            contextMock.stdout
-            contextMock.stderr
-            contextMock.commander
+            shellMock.stdout
+            shellMock.stderr
+            shellMock.commander
+            shellMock.scope
         }
-        confirmVerified(contextMock)
+        confirmVerified(shellMock)
 
         assertEquals(1, pipeline.processes.size)
         assertTrue(pipeline.closed)
@@ -242,17 +246,18 @@ class PipelineTest {
 
         // when
         val pipeline = runTest {
-            Pipeline.fromProcess(processExecutableSpy(), contextMock,  CHANNEL_BUFFER_SIZE)
+            Pipeline.fromProcess(processExecutableSpy(), shellMock,  CHANNEL_BUFFER_SIZE)
                 .toEndStream(stream)
         }
 
         // then
         verify {
-            contextMock.stdout
-            contextMock.stderr
-            contextMock.commander
+            shellMock.stdout
+            shellMock.stderr
+            shellMock.commander
+            shellMock.scope
         }
-        confirmVerified(contextMock)
+        confirmVerified(shellMock)
 
         assertEquals(1, pipeline.processes.size)
         assertTrue(pipeline.closed)
@@ -265,28 +270,30 @@ class PipelineTest {
 
         // when
         val pipeline = runTest {
-            Pipeline.fromProcess(processExecutableSpy(), contextMock,  CHANNEL_BUFFER_SIZE)
+            Pipeline.fromProcess(processExecutableSpy(), shellMock,  CHANNEL_BUFFER_SIZE)
                 .toEndStringBuilder(builder)
         }
 
         // then
         verify {
-            contextMock.stdout
-            contextMock.stderr
-            contextMock.commander
+            shellMock.stdout
+            shellMock.stderr
+            shellMock.commander
+            shellMock.scope
         }
-        confirmVerified(contextMock)
+        confirmVerified(shellMock)
 
         assertEquals(1, pipeline.processes.size)
         assertTrue(pipeline.closed)
     }
 
+    @Suppress("UNUSED_EXPRESSION") // bug in Kotlin compiler 1.3.50 EAP
     private fun <T> runTest(test: suspend PipelineTest.() -> T): T = runBlocking {
-        contextMock = contextMock(this)
+        shellMock = contextMock(this)
         test()
     }
 
-    private fun contextMock(scopeMock: CoroutineScope = mockk()) = mockk<ProcessExecutionContext> {
+    private fun contextMock(scopeMock: CoroutineScope = mockk()) = mockk<ShellProcess> {
         every { stdin } returns Channel()
         every { stdout } returns Channel()
         every { stderr } returns Channel()

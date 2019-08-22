@@ -10,6 +10,7 @@ import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessChannelUnit
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessReceiveChannel
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
 import eu.jrie.jetbrains.kotlinshell.shell.ExecutionMode
+import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.PIPELINE_CHANNEL_BUFFER_SIZE
 import eu.jrie.jetbrains.kotlinshell.shell.ShellUtility
 import eu.jrie.jetbrains.kotlinshell.shell.piping.from.ShellPipingFrom
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,9 +23,9 @@ typealias PipelineFork = suspend (ProcessReceiveChannel) -> Unit
 interface ShellPiping : ShellPipingFrom, ShellPipingThrough, ShellPipingTo, ShellUtility {
 
     /**
-     * List of all pipelines in this shell
+     * List of detached pipelines
      */
-    val pipelines: List<Pipeline>
+    val detachedPipelines: List<Pair<Int, Pipeline>>
 
     /**
      * Creates and executes new [Pipeline] specified by DSL [pipeConfig] and executes it in given [mode]
@@ -43,6 +44,11 @@ interface ShellPiping : ShellPipingFrom, ShellPipingThrough, ShellPipingTo, Shel
     suspend fun detach(pipeConfig: PipeConfig): Pipeline
 
     /**
+     * Attaches selected [Pipeline]
+     */
+    suspend fun fg(pipeline: Pipeline)
+
+    /**
      * Awaits this [Pipeline]
      * Part of piping DSL
      *
@@ -51,12 +57,12 @@ interface ShellPiping : ShellPipingFrom, ShellPipingThrough, ShellPipingTo, Shel
      */
     @Suppress("UNUSED_PARAMETER")
     @ExperimentalCoroutinesApi
-    suspend infix fun Pipeline.join(it: It) = join()
+    suspend infix fun Pipeline.join(it: Now) = join()
 
     private suspend fun forkStdErr(process: ProcessExecutable, fork: PipelineFork) {
         forkStdErr(
             process,
-            Channel<ProcessChannelUnit>(PIPELINE_CHANNEL_BUFFER_SIZE).also {
+            Channel<ProcessChannelUnit>(env(PIPELINE_CHANNEL_BUFFER_SIZE).toInt()).also {
                 fork(it)
                 process.afterJoin = { it.close() }
             }
@@ -103,15 +109,15 @@ interface ShellPiping : ShellPipingFrom, ShellPipingThrough, ShellPipingTo, Shel
 }
 
 /**
- * Object for [it] alias
+ * Object for [now] alias
  */
-object It
+object Now
 /**
  * Alias to be used in piping DSL with [Pipeline.join]
  *
- * Ex: `p1 pipe p2 await all`
+ * Ex: `p1 pipe p2 join now`
  *
  * @see ShellPiping
  * @see Pipeline
  */
-typealias it = It
+typealias now = Now

@@ -7,8 +7,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.slf4j.LoggerFactory
 
 @ExperimentalCoroutinesApi
-class ProcessCommander (
-    val scope: CoroutineScope
+class ProcessCommander internal constructor (
+    private val scope: CoroutineScope
 ) {
 
     internal val processes = mutableSetOf<Process>()
@@ -51,8 +51,9 @@ class ProcessCommander (
     }
 
     internal fun status() = processes.joinToString (
-        "\n",
-        "PID\tTIME\t    CMD\n"
+        separator = "\n",
+        prefix = "PID\tTIME\t    CMD\n",
+        postfix = "\n"
     ) { it.status }
 
     companion object {

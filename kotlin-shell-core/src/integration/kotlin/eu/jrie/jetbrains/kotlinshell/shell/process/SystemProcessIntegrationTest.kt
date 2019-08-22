@@ -76,7 +76,7 @@ class SystemProcessIntegrationTest : ProcessBaseIntegrationTest() {
 
         // when
         shell {
-            val script = systemProcess { cmd = "./${file.name}" }
+            val script = file.process()
             script()
             stateAfterCall = processes.first().pcb.state
         }
@@ -93,7 +93,7 @@ class SystemProcessIntegrationTest : ProcessBaseIntegrationTest() {
 
         // when
         shell {
-            val script = systemProcess { cmd = "./${file.name}" }
+            val script = file.process()
             detach(script)
             delay(5)
             stateAfterCall = processes.first().pcb.state
@@ -104,14 +104,32 @@ class SystemProcessIntegrationTest : ProcessBaseIntegrationTest() {
     }
 
     @Test
-    fun `should detach process with extension function`() {
+    fun `should detach process with invoke`() {
         // given
         val file = scriptFile(500)
         var stateAfterCall: ProcessState? = null
 
         // when
         shell {
-            "./${file.name}"(ExecutionMode.DETACHED)
+            file(ExecutionMode.DETACHED)
+            delay(5)
+            stateAfterCall = processes.first().pcb.state
+        }
+
+        // then
+        assertEquals(ProcessState.RUNNING, stateAfterCall)
+    }
+
+    @Test
+    fun `should detach equivalent processes`() {
+        // given
+        val file = scriptFile(500)
+        var stateAfterCall: ProcessState? = null
+
+        // when
+        shell {
+            val script = file.process()
+            detach(script.copy(), script.copy(), script.copy())
             delay(5)
             stateAfterCall = processes.first().pcb.state
         }
@@ -127,14 +145,13 @@ class SystemProcessIntegrationTest : ProcessBaseIntegrationTest() {
 
         // when
         shell {
-            val p1 = "./${file.name}".process()
-            val p2 = "./${file.name}".process()
-            val p3 = "./${file.name}".process()
+            val p1 = file.process()
+            val p2 = file.process()
+            val p3 = file.process()
             detach(p1, p2, p3)
 
             // then
-            assertIterableEquals(listOf(p1.process, p2.process, p3.process), detached)
-            // TODO: check "jobs()"
+            assertIterableEquals(listOf(1 to p1.process, 2 to p2.process, 3 to p3.process), detachedProcesses)
         }
     }
 
@@ -146,10 +163,29 @@ class SystemProcessIntegrationTest : ProcessBaseIntegrationTest() {
 
         // when
         shell {
-            val script = systemProcess { cmd = "./${file.name}" }
+            val script = file.process()
             detach(script)
             delay(50)
             fg()
+            stateAfterAttach = processes.first().pcb.state
+        }
+
+        // then
+        assertEquals(ProcessState.TERMINATED, stateAfterAttach)
+    }
+
+    @Test
+    fun `should detach multiple processes`() {
+        // given
+        val file = scriptFile(500)
+        var stateAfterAttach: ProcessState? = null
+
+        // when
+        shell {
+            val script = file.process()
+            val detached = detach(script.copy(), script.copy(), script.copy())
+            delay(5)
+            join(*detached.toTypedArray())
             stateAfterAttach = processes.first().pcb.state
         }
 

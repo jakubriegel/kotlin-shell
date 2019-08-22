@@ -1,4 +1,6 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.jfrog.bintray.gradle.BintrayExtension
+import org.jetbrains.dokka.gradle.DokkaTask
 
 plugins {
     kotlin("jvm")
@@ -9,53 +11,109 @@ plugins {
 }
 
 dependencies {
-    implementation(kotlin("stdlib-jdk8"))
-    api(kotlin("reflect"))
-
-    compileOnly(kotlin("compiler"))
-    compileOnly(kotlin("scripting-jvm-host"))
-    compileOnly(kotlin("script-util"))
+    compileOnly(kotlin("stdlib-jdk8"))
+    compileOnly(kotlin("reflect"))
+    api(kotlin("main-kts"))
 
     api(project(":kotlin-shell-core"))
     api("org.slf4j:slf4j-nop:1.7.26")
 }
 
-tasks.shadowJar {
-    setProperty("archiveName", "ksh.jar")
-    dependencies {
-        exclude(dependency("org.jetbrains.kotlin::"))
+val dokkaJarConfig: (task: TaskProvider<DokkaTask>) ->  Jar.() -> Unit by rootProject.extra
+val dokkaJar by tasks.creating(Jar::class, dokkaJarConfig(tasks.dokka))
+
+val sourcesJarConfig: Jar.() -> Unit by rootProject.extra
+val sourcesJar by tasks.creating(Jar::class, sourcesJarConfig)
+
+tasks {
+    val jarBaseName = "kotlin-shell-kts"
+
+    val dokkaConfig: DokkaTask.() -> Unit by rootProject.extra
+    dokka(dokkaConfig)
+
+    val relocatedPackagesRoot = "$group.relocated"
+    val packagesToRelocate = listOf(
+        "org.jetbrains.kotlin",
+        "kotlin.script.dependencies",
+//        "kotlin.script.experimental.annotations",
+//        "kotlin.script.experimental.api",
+//        "kotlin.script.experimental.host",
+//        "kotlin.script.experimental.jvm",
+//        "kotlin.script.experimental.util",
+        "kotlin.script.experimental.dependencies",
+        "kotlin.script.experimental.jvmhost",
+        "kotlin.script.experimental.location",
+        "fr.jayasoft.ivy",
+        "org.intellij",
+        "org.jetbrains.annotations",
+        "org.zeroturnaround",
+        "org.slf4j"
+//    commented ones cause errors on script compilation
+    )
+
+    fun ShadowJar.configureShadow(classifier: String) {
+        setProperty("archiveBaseName", jarBaseName)
+        setProperty("archiveClassifier", classifier)
     }
-}
 
-val bintrayPublication = "ksh"
+    shadowJar {
+        configureShadow("all")
 
-publishing {
-    publications {
-        create<MavenPublication>(bintrayPublication) {
-            from(components["kotlin"])
-            groupId = project.group.toString()
-            artifactId = project.name
-            version = project.version.toString()
-            setArtifacts(listOf(tasks.shadowJar.get()))
+        dependencies {
+            // stdlib
+            exclude(dependency("org.jetbrains.kotlin:kotlin-stdlib-jdk8:"))
+            exclude(dependency("org.jetbrains.kotlin:kotlin-stdlib-jdk7:"))
+
+            // reflect
+            exclude(dependency("org.jetbrains.kotlin:kotlin-reflect:"))
+
+            // main-kts
+            exclude("META-INF/kotlin/script/templates/org.jetbrains.kotlin.mainKts.MainKtsScript.classname")
+            exclude(dependency("org.jetbrains.kotlin:kotlin-scripting-jvm-host-embeddable:"))
+            exclude(dependency("org.jetbrains.kotlin:kotlin-compiler-embeddable:"))
+            exclude(dependency("org.jetbrains.kotlin:kotlin-script-runtime:"))
+            exclude(dependency("org.jetbrains.kotlin:kotlin-daemon-embeddable:"))
+            exclude(dependency("org.jetbrains.intellij.deps:trove4j:1.0.20181211"))
+            exclude(dependency("org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable:"))
+            exclude(dependency("org.jetbrains.kotlin:kotlin-scripting-compiler-impl-embeddable:"))
+            exclude(dependency("org.jetbrains.kotlin:kotlin-scripting-jvm:"))
+            exclude(dependency("org.jetbrains.kotlin:kotlin-scripting-common:"))
+
+            // shell-core
+            exclude(dependency("org.jetbrains.kotlin:kotlin-stdlib:"))
+            exclude(dependency("org.jetbrains.kotlin:kotlin-stdlib-common:"))
+            exclude(dependency("org.jetbrains:annotations:"))
+        }
+
+        packagesToRelocate.forEach {
+            relocate(it, "$relocatedPackagesRoot.$it")
         }
     }
 }
 
-bintray {
-    user = System.getenv("BINTRAY_USER")
-    key = System.getenv("BINTRAY_KEY")
-    setPublications(bintrayPublication)
-    publish = true
-    pkg (delegateClosureOf<BintrayExtension.PackageConfig> {
-        repo = "kotlin-shell"
-        name = "kotlin-shell-kts"
-        userOrg = "jakubriegel"
-        websiteUrl = ""
-        githubRepo = "jakubriegel/kotlin-shell"
-        vcsUrl = "https://github.com/jakubriegel/kotlin-shell"
-        description = "Script definition for Kotlin shell scripting"
-        setLabels("kotlin", "shell", "pipeline", "process-management", "script")
-        setLicenses("apache2")
-        desc = description
-    })
+artifacts {
+    archives(sourcesJar)
+    archives(dokkaJar)
+    archives(tasks.jar)
 }
+
+val bintrayPublication = "kotlin-shell-kts"
+
+val publicationConfig: (Project, String, List<Jar>) -> Action<PublishingExtension> by rootProject.extra
+publishing(
+    publicationConfig(
+        project,
+        bintrayPublication,
+        listOf(tasks.jar.get(), sourcesJar, dokkaJar)
+    )
+)
+
+
+
+val uploadConfig: (String, String) -> Action<BintrayExtension> by rootProject.extra
+bintray(
+    uploadConfig(
+        bintrayPublication,
+        "Script definition for Kotlin shell scripting"
+    )
+)

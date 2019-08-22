@@ -30,7 +30,7 @@ class ProcessIOIntegrationTest : ProcessBaseIntegrationTest() {
     }
 
     @Test
-    fun `should print stdout and stderr to console when no redirect buffers given`() {
+    fun `should print stdout and stderr to console when no redirects given`() {
         // when
         shell {
             val process = systemProcess { cmd = "./${script.name}" }
@@ -42,6 +42,30 @@ class ProcessIOIntegrationTest : ProcessBaseIntegrationTest() {
 //        assertEquals(scriptOut(n), outFile.withoutLogs())
         val expected = scriptOut(n).lines().toHashSet()
         val actual = outFile.withoutLogs().lines().toHashSet()
+        assertIterableEquals(expected, actual)
+
+    }
+
+    @Test
+    fun `should print to system out in the order of execution`(){
+        // given
+        val envBuilder = StringBuilder()
+
+        // when
+        shell {
+            pipeline { env pipe envBuilder }
+
+            "echo hello"()
+            println("first")
+            env()
+            println("second")
+            env()
+        }
+
+        // then
+        val env = envBuilder.toString()
+        val expected = "hello\nfirst\n${env}second\n$env".lines()
+        val actual = outFile.withoutLogs().lines()
         assertIterableEquals(expected, actual)
 
     }

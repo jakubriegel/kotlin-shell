@@ -5,6 +5,7 @@ import eu.jrie.jetbrains.kotlinshell.processes.pipeline.Pipeline
 import eu.jrie.jetbrains.kotlinshell.processes.pipeline.PipelineContextLambda
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessChannelInputStream
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessChannelOutputStream
+import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.PIPELINE_CHANNEL_BUFFER_SIZE
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.io.core.ByteReadPacket
@@ -14,10 +15,10 @@ import kotlinx.io.core.writeFully
 import java.io.InputStream
 import java.io.OutputStream
 
-typealias PipelinePacketLambda = (ByteReadPacket) -> Pair<ByteReadPacket, ByteReadPacket>
-typealias PipelineByteArrayLambda = (ByteArray) -> Pair<ByteArray, ByteArray>
-typealias PipelineStringLambda = (String) -> Pair<String, String>
-typealias PipelineStreamLambda = (InputStream, OutputStream, OutputStream) -> Unit
+typealias PipelinePacketLambda = suspend (ByteReadPacket) -> Pair<ByteReadPacket, ByteReadPacket>
+typealias PipelineByteArrayLambda = suspend (ByteArray) -> Pair<ByteArray, ByteArray>
+typealias PipelineStringLambda = suspend (String) -> Pair<String, String>
+typealias PipelineStreamLambda = suspend (InputStream, OutputStream, OutputStream) -> Unit
 
 @ExperimentalCoroutinesApi
 interface ShellPipingThrough : ShellPipingTo {
@@ -111,11 +112,13 @@ interface ShellPipingThrough : ShellPipingTo {
      * Constructs [PipelineStreamLambda] to be used in piping
      * Part of piping DSL
      */
-    fun streamLambda(lambda: PipelineStreamLambda) = contextLambda { ctx ->
-        val inStream = ProcessChannelInputStream(ctx.stdin, this.commander.scope, PIPELINE_CHANNEL_BUFFER_SIZE)
-        val stdStream = ProcessChannelOutputStream(ctx.stdout, this.commander.scope, PIPELINE_CHANNEL_BUFFER_SIZE)
-        val errStream = ProcessChannelOutputStream(ctx.stderr, this.commander.scope, PIPELINE_CHANNEL_BUFFER_SIZE)
-        lambda(inStream, stdStream, errStream)
+    fun streamLambda(lambda: PipelineStreamLambda) = env(PIPELINE_CHANNEL_BUFFER_SIZE).toInt().let { size ->
+        contextLambda { ctx ->
+            val inStream = ProcessChannelInputStream(ctx.stdin, scope, size)
+            val stdStream = ProcessChannelOutputStream(ctx.stdout, scope, size)
+            val errStream = ProcessChannelOutputStream(ctx.stderr, scope, size)
+            lambda(inStream, stdStream, errStream)
+        }
     }
 
 }

@@ -6,9 +6,11 @@ import eu.jrie.jetbrains.kotlinshell.processes.pipeline.PipelineContextLambda
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessChannel
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessReceiveChannel
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
-import eu.jrie.jetbrains.kotlinshell.shell.Shell
-import eu.jrie.jetbrains.kotlinshell.shell.ShellExecutable
+import eu.jrie.jetbrains.kotlinshell.shell.Readonly
+import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.DEFAULT_PIPELINE_CHANNEL_BUFFER_SIZE
+import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.PIPELINE_CHANNEL_BUFFER_SIZE
 import io.mockk.mockk
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
@@ -142,7 +144,18 @@ class ShellPipingThroughTest {
     }
 
     private class SampleShell : ShellPipingThrough {
-        override var environment: Map<String, String> = emptyMap()
+        override fun cd(dir: File): File = mockk()
+        override fun variable(variable: Pair<String, String>) = Unit
+        override fun export(env: Pair<String, String>) = Unit
+        override fun unset(key: String) = Unit
+        override fun Readonly.variable(variable: Pair<String, String>) = Unit
+        override fun Readonly.export(env: Pair<String, String>) = Unit
+
+        override val scope: CoroutineScope = mockk()
+
+        override var environment: Map<String, String> = mapOf(
+            PIPELINE_CHANNEL_BUFFER_SIZE to "$DEFAULT_PIPELINE_CHANNEL_BUFFER_SIZE"
+        )
         override var variables: Map<String, String> = emptyMap()
         override var directory: File = File("")
 
@@ -152,13 +165,7 @@ class ShellPipingThroughTest {
         override val stderr: ProcessSendChannel = Channel()
         override val stdin: ProcessReceiveChannel = Channel()
 
-        override fun exec(block: Shell.() -> String): ShellExecutable = mockk()
-
         override suspend fun finalize() {}
-
-        override val SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE: Int = 1
-        override val PIPELINE_RW_PACKET_SIZE: Long = 1
-        override val PIPELINE_CHANNEL_BUFFER_SIZE: Int = 1
     }
 
     private class SampleContext : ExecutionContext {

@@ -49,10 +49,14 @@ interface ShellUtility : ShellBase {
      */
     fun variable(variable: Pair<String, String>)
 
+    infix fun Readonly.variable(variable: Pair<String, String>)
+
     /**
      * Adds new environment variable
      */
     fun export(env: Pair<String, String>)
+
+    infix fun Readonly.export(env: Pair<String, String>)
 
     /**
      * Removes shell or environmental variable matching given key
@@ -65,20 +69,22 @@ interface ShellUtility : ShellBase {
      * @see [set]
      * @see [shellEnv]
      */
-    val env: ShellExecutable get() = exec { environment.toEnvString() }
+    val env: ShellCommand get() = command { environment.toEnvString() }
 
     /**
-     * Retrieves environment variable matching given key or `""`
+     * Retrieves environment or shell variable matching given key or `""`
      *
      * @see [env]
      * @see [shellEnv]
+     * @see [variable]
+     * @see [variables]
      */
-    fun env(key: String) = environment[key] ?: ""
+    fun env(key: String) = environment[key] ?: variables[key] ?: ""
 
     /**
      * Retrieves shell environment variables
      */
-    val set: ShellExecutable get() = exec { shellEnv.toEnvString() }
+    val set: ShellCommand get() = command { shellEnv.toEnvString() }
 
     /**
      * Retrieves all environment variables and returns them as a [Map]
@@ -149,3 +155,15 @@ object Pre
  * @see ShellUtility.cd
  */
 typealias pre = Pre
+
+/**
+ * Object for [readonly] keyword
+ */
+object Readonly
+/**
+ * Keyword for making variables readonly
+ *
+ * Ex: `readonly export("VAR" to "VAL")`
+ * Ex: `readonly variable("VAR" to "VAL")`
+ */
+typealias readonly = Readonly
