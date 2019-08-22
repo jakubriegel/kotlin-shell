@@ -31,7 +31,18 @@ interface ShellProcess : ShellUtility {
      */
     val daemons: List<Process>
 
+    /**
+     * Dummy input channel. Behaves like `/dev/null`.
+     *
+     * @see nullout
+     */
     val nullin: ProcessReceiveChannel
+
+    /**
+     * Dummy output channel. Behaves like `/dev/null`.
+     *
+     * @see nullout
+     */
     val nullout: ProcessSendChannel
 
     /**

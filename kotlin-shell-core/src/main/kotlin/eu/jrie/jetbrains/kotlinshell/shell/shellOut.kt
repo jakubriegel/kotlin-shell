@@ -23,7 +23,7 @@ internal fun initOut(scope: CoroutineScope): Pair<ProcessSendChannel, Job> {
     val out = Channel<ProcessChannelUnit>()
     val job = scope.launch { consumeOut(out, systemOut) }
 
-    if (System.getenv("REDIRECT_PRINT")?.toUpperCase() != "NO") redirectPrint(out, job, scope, systemOut)
+    if (System.getenv("REDIRECT_SYSTEM_OUT")?.toUpperCase() != "NO") redirectPrint(out, job, scope, systemOut)
     return out to job
 }
 
