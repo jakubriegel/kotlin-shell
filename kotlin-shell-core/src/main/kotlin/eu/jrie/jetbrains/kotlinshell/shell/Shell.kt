@@ -20,9 +20,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
-import kotlinx.io.streams.writePacket
 import org.slf4j.LoggerFactory
 import java.io.File
 
@@ -228,16 +226,6 @@ open class Shell protected constructor (
                 scope, stdout.first, stdout.first
             ).apply { stdoutJob = stdout.second }
         }
-
-        private fun initOut(scope: CoroutineScope): Pair<ProcessSendChannel, Job> = Channel<ProcessChannelUnit>()
-            .let {
-                it to scope.launch {
-                    it.consumeEach { p ->
-                        System.out.writePacket(p)
-                        System.out.flush()
-                    }
-                }
-            }
 
         internal fun build(
             env: Map<String, String>?,
