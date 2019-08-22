@@ -224,9 +224,5 @@ class ShellUtilityTest {
         override val stdin: ProcessReceiveChannel = Channel()
 
         override suspend fun finalize() {}
-
-        override val SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE: Int = 1
-        override val PIPELINE_RW_PACKET_SIZE: Long = 1
-        override val PIPELINE_CHANNEL_BUFFER_SIZE: Int = 1
     }
 }

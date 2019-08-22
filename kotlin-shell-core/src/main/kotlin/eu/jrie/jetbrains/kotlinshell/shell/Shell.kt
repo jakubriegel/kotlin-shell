@@ -8,6 +8,12 @@ import eu.jrie.jetbrains.kotlinshell.processes.process.Process
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessChannelUnit
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessReceiveChannel
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
+import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.DEFAULT_PIPELINE_CHANNEL_BUFFER_SIZE
+import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.DEFAULT_PIPELINE_RW_PACKET_SIZE
+import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.DEFAULT_SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE
+import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.PIPELINE_CHANNEL_BUFFER_SIZE
+import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.PIPELINE_RW_PACKET_SIZE
+import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE
 import eu.jrie.jetbrains.kotlinshell.shell.piping.PipeConfig
 import eu.jrie.jetbrains.kotlinshell.shell.piping.ShellPiping
 import kotlinx.coroutines.CoroutineScope
@@ -28,10 +34,7 @@ open class Shell protected constructor (
     final override val scope: CoroutineScope,
     final override val commander: ProcessCommander,
     final override val stdout: ProcessSendChannel,
-    final override val stderr: ProcessSendChannel,
-    final override val SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE: Int,
-    final override val PIPELINE_RW_PACKET_SIZE: Long,
-    final override val PIPELINE_CHANNEL_BUFFER_SIZE: Int
+    final override val stderr: ProcessSendChannel
 ) : ShellPiping, ShellProcess, ShellUtility {
 
     protected constructor (
@@ -40,17 +43,12 @@ open class Shell protected constructor (
         directory: File,
         scope: CoroutineScope,
         stdout: ProcessSendChannel,
-        stderr: ProcessSendChannel,
-        SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE: Int,
-        PIPELINE_RW_PACKET_SIZE: Long,
-        PIPELINE_CHANNEL_BUFFER_SIZE: Int
+        stderr: ProcessSendChannel
     ) : this(
         environment, variables, directory,
         scope, ProcessCommander(scope),
-        stdout, stderr, SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE, PIPELINE_RW_PACKET_SIZE, PIPELINE_CHANNEL_BUFFER_SIZE
+        stdout, stderr
     )
-
-//    final override val commander = ProcessCommander(scope)
 
     final override val nullin: ProcessReceiveChannel = Channel<ProcessChannelUnit>().apply { close() }
     final override val nullout: ProcessSendChannel = NullSendChannel()
@@ -101,7 +99,16 @@ open class Shell protected constructor (
 
     private fun initEnv() {
         environment =  systemEnv + environment
+
         export("PWD" to directory.absolutePath)
+
+        exportIfNotPresent(SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE to "$DEFAULT_SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE")
+        exportIfNotPresent(PIPELINE_RW_PACKET_SIZE to "$DEFAULT_PIPELINE_RW_PACKET_SIZE")
+        exportIfNotPresent(PIPELINE_CHANNEL_BUFFER_SIZE to "$DEFAULT_PIPELINE_CHANNEL_BUFFER_SIZE")
+    }
+
+    private fun exportIfNotPresent(variable: Pair<String, String>) {
+        if (!environment.containsKey(variable.first)) export(variable)
     }
 
     override fun cd(dir: File): File {
@@ -202,10 +209,7 @@ open class Shell protected constructor (
         dir,
         scope,
         stdout,
-        stderr,
-        SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE,
-        PIPELINE_RW_PACKET_SIZE,
-        PIPELINE_CHANNEL_BUFFER_SIZE
+        stderr
     )
         .apply { script() }
         .finalizeDetached()
@@ -216,23 +220,19 @@ open class Shell protected constructor (
             environment: Map<String, String>,
             variables: Map<String, String>,
             directory: File,
-            scope: CoroutineScope,
-            SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE: Int,
-            PIPELINE_RW_PACKET_SIZE: Long,
-            PIPELINE_CHANNEL_BUFFER_SIZE: Int
+            scope: CoroutineScope
         ): Shell {
             val stdout = initOut(scope)
             return Shell(
                 environment, variables, directory,
-                scope, stdout.first, stdout.first,
-                SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE, PIPELINE_RW_PACKET_SIZE, PIPELINE_CHANNEL_BUFFER_SIZE
+                scope, stdout.first, stdout.first
             ).apply { stdoutJob = stdout.second }
         }
 
         private fun initOut(scope: CoroutineScope): Pair<ProcessSendChannel, Job> = Channel<ProcessChannelUnit>()
-            .run {
-                this to scope.launch {
-                    consumeEach { p ->
+            .let {
+                it to scope.launch {
+                    it.consumeEach { p ->
                         System.out.writePacket(p)
                         System.out.flush()
                     }
@@ -242,19 +242,13 @@ open class Shell protected constructor (
         internal fun build(
             env: Map<String, String>?,
             dir: File?,
-            scope: CoroutineScope,
-            systemProcessInputStreamBufferSize: Int,
-            pipelineRwPacketSize: Long,
-            pipelineChannelBufferSize: Int
+            scope: CoroutineScope
         ) =
             build(
                 env ?: emptyMap(),
                 emptyMap(),
                 assertDir(dir?.absoluteFile ?: currentDir()),
-                scope,
-                systemProcessInputStreamBufferSize,
-                pipelineRwPacketSize,
-                pipelineChannelBufferSize
+                scope
             )
 
         private fun currentDir(): File {

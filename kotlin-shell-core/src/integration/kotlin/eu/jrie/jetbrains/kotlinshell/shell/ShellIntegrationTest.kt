@@ -274,4 +274,39 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
             ) {  }
         }
     }
+
+    @Test
+    fun `should set constants to default`() {
+        // when
+        shell {
+            assertEquals(env("SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE"), "${ShellBase.DEFAULT_SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE}")
+            assertEquals(env("PIPELINE_CHANNEL_BUFFER_SIZE"), "${ShellBase.DEFAULT_PIPELINE_CHANNEL_BUFFER_SIZE}")
+            assertEquals(env("PIPELINE_RW_PACKET_SIZE"), "${ShellBase.DEFAULT_PIPELINE_RW_PACKET_SIZE}")
+        }
+
+    }
+
+    @Test
+    fun `should set constants based on given environment`() {
+        // given
+        val systemProcessInputStreamBufferSize = 1
+        val pipelineChannelBufferSize = 2
+        val pipelineRWPacketSize = 3
+
+        val env = mapOf(
+            "SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE" to "$systemProcessInputStreamBufferSize",
+            "PIPELINE_CHANNEL_BUFFER_SIZE" to "$pipelineChannelBufferSize",
+            "PIPELINE_RW_PACKET_SIZE" to "$pipelineRWPacketSize"
+        )
+
+        // when
+        shell (
+            testEnv = env
+        ) {
+            assertEquals(env("SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE"), "$systemProcessInputStreamBufferSize")
+            assertEquals(env("PIPELINE_CHANNEL_BUFFER_SIZE"), "$pipelineChannelBufferSize")
+            assertEquals(env("PIPELINE_RW_PACKET_SIZE"), "$pipelineRWPacketSize")
+        }
+
+    }
 }

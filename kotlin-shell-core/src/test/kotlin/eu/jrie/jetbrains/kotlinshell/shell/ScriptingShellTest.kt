@@ -18,7 +18,7 @@ import java.io.File
 class ScriptingShellTest {
 
     private val shellSpy = spyk(
-        Shell.build(emptyMap(), File(System.getProperty("user.home")), GlobalScope, 16, 16, 16)
+        Shell.build(emptyMap(), File(System.getProperty("user.home")), GlobalScope)
     ) {
         coEvery { systemProcess(ofType(String::class)) } returns mockk()
         coEvery { detach(*anyVararg()) } returns mockk()

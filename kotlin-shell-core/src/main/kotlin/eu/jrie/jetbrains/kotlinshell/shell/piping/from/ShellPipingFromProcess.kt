@@ -5,6 +5,7 @@ import eu.jrie.jetbrains.kotlinshell.processes.pipeline.Pipeline
 import eu.jrie.jetbrains.kotlinshell.processes.pipeline.PipelineContextLambda
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessBuilder
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
+import eu.jrie.jetbrains.kotlinshell.shell.ShellBase
 import eu.jrie.jetbrains.kotlinshell.shell.piping.ShellPipingThrough
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.io.core.BytePacketBuilder
@@ -19,7 +20,9 @@ interface ShellPipingFromProcess : ShellPipingThrough {
      *
      * @return this [Pipeline]
      */
-    suspend fun from(process: ProcessExecutable) = Pipeline.fromProcess(process, this, PIPELINE_CHANNEL_BUFFER_SIZE)
+    suspend fun from(process: ProcessExecutable) = Pipeline.fromProcess(
+        process, this, env(ShellBase.PIPELINE_CHANNEL_BUFFER_SIZE).toInt()
+    )
 
     /**
      * Starts new [Pipeline] from process ran by this [ProcessExecutable] to one specified by [process].

@@ -9,11 +9,12 @@ import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessBuilder
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessReceiveChannel
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessState
+import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import java.io.File
 
 @ExperimentalCoroutinesApi
-interface ShellProcess : ShellBase {
+interface ShellProcess : ShellUtility {
 
     /**
      * All processes
@@ -43,7 +44,9 @@ interface ShellProcess : ShellBase {
      */
     fun systemBuilder(config: SystemProcessConfiguration.() -> Unit) = SystemProcessConfiguration()
         .apply(config)
-        .apply { systemProcessInputStreamBufferSize = SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE }
+        .apply {
+            systemProcessInputStreamBufferSize = this@ShellProcess.env(SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE).toInt()
+        }
         .configureBuilder()
 
     /**

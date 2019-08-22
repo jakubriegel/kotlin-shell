@@ -19,10 +19,7 @@ import java.io.File
 fun script(script: ScriptingShell.() -> Unit) {
     ScriptingShell(
         emptyMap(),
-        File(System.getProperty("user.dir")),
-        DEFAULT_SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE,
-        DEFAULT_PIPELINE_RW_PACKET_SIZE,
-        DEFAULT_PIPELINE_CHANNEL_BUFFER_SIZE
+        File(System.getProperty("user.dir"))
     ).script()
 }
 
@@ -36,9 +33,6 @@ fun script(scope: CoroutineScope, script: ScriptingShell.() -> Unit) {
     ScriptingShell(
         emptyMap(),
         File(System.getProperty("user.dir")),
-        DEFAULT_SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE,
-        DEFAULT_PIPELINE_RW_PACKET_SIZE,
-        DEFAULT_PIPELINE_CHANNEL_BUFFER_SIZE,
         scope
     ).script()
 }
@@ -58,18 +52,12 @@ open class ScriptingShell internal constructor (
     constructor(
         environment: Map<String, String>,
         directory: File,
-        SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE: Int,
-        PIPELINE_RW_PACKET_SIZE: Long,
-        PIPELINE_CHANNEL_BUFFER_SIZE: Int,
         scope: CoroutineScope = GlobalScope
     ) : this(
         Shell.build(
             environment,
             directory,
-            scope,
-            SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE,
-            PIPELINE_RW_PACKET_SIZE,
-            PIPELINE_CHANNEL_BUFFER_SIZE
+            scope
         )
     )
 

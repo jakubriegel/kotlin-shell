@@ -10,6 +10,7 @@ import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessChannelUnit
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessReceiveChannel
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
 import eu.jrie.jetbrains.kotlinshell.shell.ExecutionMode
+import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.PIPELINE_CHANNEL_BUFFER_SIZE
 import eu.jrie.jetbrains.kotlinshell.shell.ShellUtility
 import eu.jrie.jetbrains.kotlinshell.shell.piping.from.ShellPipingFrom
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -61,7 +62,7 @@ interface ShellPiping : ShellPipingFrom, ShellPipingThrough, ShellPipingTo, Shel
     private suspend fun forkStdErr(process: ProcessExecutable, fork: PipelineFork) {
         forkStdErr(
             process,
-            Channel<ProcessChannelUnit>(PIPELINE_CHANNEL_BUFFER_SIZE).also {
+            Channel<ProcessChannelUnit>(env(PIPELINE_CHANNEL_BUFFER_SIZE).toInt()).also {
                 fork(it)
                 process.afterJoin = { it.close() }
             }

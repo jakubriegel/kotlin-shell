@@ -8,6 +8,8 @@ import eu.jrie.jetbrains.kotlinshell.processes.process.Process
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessReceiveChannel
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessState
+import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.DEFAULT_SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE
+import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE
 import eu.jrie.jetbrains.kotlinshell.testutils.TestDataFactory.VIRTUAL_PID
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -250,10 +252,10 @@ class ShellProcessTest {
         coEvery { anyConstructed<ProcessExecutable>().invoke(any()) } just runs
         every { anyConstructed<ProcessExecutable>().process } returns mockk()
 
-        val file = File("some/file")
+        val testFile = File("some/file")
 
         // when
-        with(shell) { file("arg1", "arg2") }
+        with(shell) { testFile("arg1", "arg2") }
 
         // then
         verify {
@@ -388,6 +390,11 @@ class ShellProcessTest {
 
     @ExperimentalCoroutinesApi
     private class SampleShell : ShellProcess {
+        override fun cd(dir: File): File = mockk()
+        override fun variable(variable: Pair<String, String>) = Unit
+        override fun export(env: Pair<String, String>) = Unit
+        override fun unset(key: String) = Unit
+
         override val scope: CoroutineScope = mockk()
         override val detachedProcesses: List<Pair<Int, Process>> = emptyList()
         override val daemons: List<Process> = emptyList()
@@ -399,7 +406,9 @@ class ShellProcessTest {
         override suspend fun fg(process: Process) = Unit
         override suspend fun daemon(executable: ProcessExecutable): Process = mockk()
 
-        override val environment: Map<String, String> = emptyMap()
+        override val environment: Map<String, String> = mapOf(
+            SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE to "$DEFAULT_SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE"
+        )
         override val variables: Map<String, String> = emptyMap()
         override val directory: File = File("path")
 
@@ -410,11 +419,6 @@ class ShellProcessTest {
         override val stderr: ProcessSendChannel = Channel()
         @ExperimentalCoroutinesApi
         override val commander: ProcessCommander = commanderMock
-
-        override val SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE: Int = 1
-        override val PIPELINE_RW_PACKET_SIZE: Long = 1
-        override val PIPELINE_CHANNEL_BUFFER_SIZE: Int = 1
-
     }
 
 }

@@ -10,7 +10,7 @@ import kotlinx.io.core.buildPacket
 import kotlinx.io.core.writeText
 import java.io.File
 
-typealias ShellCommand = PipelineContextLambda//() -> String
+typealias ShellCommand = PipelineContextLambda
 
 @Suppress("PropertyName")
 @ExperimentalCoroutinesApi
@@ -55,8 +55,14 @@ interface ShellBase : ProcessExecutionContext {
         stderr.close()
     }
 
-    val SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE: Int
-    val PIPELINE_RW_PACKET_SIZE: Long
-    val PIPELINE_CHANNEL_BUFFER_SIZE: Int
+    companion object {
+        const val SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE = "SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE"
+        const val PIPELINE_RW_PACKET_SIZE = "PIPELINE_RW_PACKET_SIZE"
+        const val PIPELINE_CHANNEL_BUFFER_SIZE = "PIPELINE_CHANNEL_BUFFER_SIZE"
+
+        const val DEFAULT_SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE: Int = 512
+        const val DEFAULT_PIPELINE_RW_PACKET_SIZE: Long = 256
+        const val DEFAULT_PIPELINE_CHANNEL_BUFFER_SIZE: Int = 16
+    }
 
 }
