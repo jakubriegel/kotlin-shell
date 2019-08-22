@@ -1,17 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.jfrog.bintray.gradle.BintrayExtension
 import org.jetbrains.dokka.gradle.DokkaTask
-import proguard.gradle.ProGuardTask
-
-buildscript {
-    repositories {
-        flatDir { dirs("/usr/local/Cellar/proguard/6.1.1/libexec") }
-    }
-
-    dependencies {
-        classpath(":proguard:")
-    }
-}
 
 plugins {
     kotlin("jvm")
@@ -55,14 +44,12 @@ tasks {
         "kotlin.script.experimental.jvmhost",
         "kotlin.script.experimental.location",
         "fr.jayasoft.ivy",
-//        "kotlinx",
         "org.intellij",
         "org.jetbrains.annotations",
         "org.zeroturnaround",
         "org.slf4j"
+//    commented ones cause errors on script compilation
     )
-
-    val proguardLibraryJars by configurations.creating
 
     fun ShadowJar.configureShadow(classifier: String) {
         setProperty("archiveBaseName", jarBaseName)
@@ -70,7 +57,7 @@ tasks {
     }
 
     shadowJar {
-        configureShadow("full")
+        configureShadow("all")
 
         dependencies {
             // stdlib
@@ -102,24 +89,6 @@ tasks {
             relocate(it, "$relocatedPackagesRoot.$it")
         }
     }
-
-    val proguardJar by creating(ProGuardTask::class) {
-        group = "build"
-
-        dependsOn(shadowJar)
-        configuration("shell-kts.pro")
-
-        injars(mapOf("filter" to "!META-INF/versions/**"), shadowJar.get().outputs.files)
-
-        val outputJar = File("$buildDir/libs/$jarBaseName-$version-all.jar")
-
-        outjars(outputJar)
-
-        inputs.files(shadowJar.get().outputs.files.singleFile)
-        outputs.file(outputJar)
-
-        libraryjars(mapOf("filter" to "!META-INF/versions/**"), proguardLibraryJars)
-    }
 }
 
 artifacts {
@@ -135,7 +104,7 @@ publishing(
     publicationConfig(
         project,
         bintrayPublication,
-        listOf(tasks.jar.get(), sourcesJar, dokkaJar) //, proguardJar)
+        listOf(tasks.jar.get(), sourcesJar, dokkaJar)
     )
 )
 
