@@ -76,7 +76,6 @@ Kotlin Shell scripts have `sh.kts` extension.
 Some environment variables may be set to customize script execution. Go to the [environment](#environment) section to learn more.
 
 #### `kshell` command
-
 ##### command line
 To run the script type:
 ```
