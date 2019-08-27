@@ -48,17 +48,6 @@ interface ShellPiping : ShellPipingFrom, ShellPipingThrough, ShellPipingTo, Shel
      */
     suspend fun fg(pipeline: Pipeline)
 
-    /**
-     * Awaits this [Pipeline]
-     * Part of piping DSL
-     *
-     * @see Pipeline.join
-     * @return this [Pipeline]
-     */
-    @Suppress("UNUSED_PARAMETER")
-    @ExperimentalCoroutinesApi
-    suspend infix fun Pipeline.join(it: Now) = join()
-
     private suspend fun forkStdErr(process: ProcessExecutable, fork: PipelineFork) {
         forkStdErr(
             process,
@@ -112,17 +101,3 @@ interface ShellPiping : ShellPipingFrom, ShellPipingThrough, ShellPipingTo, Shel
         this.context = ForkErrorExecutionContext(this.context as ProcessExecutionContext, err)
     }
 }
-
-/**
- * Object for [now] alias
- */
-object Now
-/**
- * Alias to be used in piping DSL with [Pipeline.join]
- *
- * Ex: `p1 pipe p2 join now`
- *
- * @see ShellPiping
- * @see Pipeline
- */
-typealias now = Now
