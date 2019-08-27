@@ -181,19 +181,19 @@ Pipelines can operate on processes, lambdas, files, strings, byte packages and s
 
 #### piping logic
 ##### introduction
-Every executable element in Kotlin Shell receives its own `ExecutionContext`, which consist of `stdin`, `stdout` and `stderr` implemented as `Channels`. In the library channels are used under aliases `ProcessChannel`, `ProcessSendChannel` and `ProcessReceiveChannel` their unit is `ByteReadPacket`. `Shell` itself is an `ExecutionContext` and provides default channels:
+Every executable element in Kotlin Shell receives its own `ExecutionContext`, which consist of `stdin`, `stdout` and `stderr` implemented as `Channels`. In the library channels are used under aliases `ProcessChannel`, `ProcessSendChannel` and `ProcessReceiveChannel` their unit is always `ByteReadPacket`. `Shell` itself is an `ExecutionContext` and provides default channels:
 * `stdin` is always empty and closed `ProcessReceiveChannel`, which effectively acts like `/dev/null`. It  It can be accessed elsewhere by `nullin` member.
-* `stdout` is a `ProcessSendChannel`, that passes everything to `System.out`.
+* `stdout` is a rendezvous `ProcessSendChannel`, that passes everything to `System.out`.
 * `stderr` is a reference to `stdout`.
 
 Beside them there is also special member `ProcessSendChannel` called `nullout`, which acts like `/dev/null`. 
 
-Pipeline elements are connected by `ProcessChannel`s, that override their context's default IO. Only the neccessary streams are overriden, so not piped ones are redirected to the channels, that came with context. Each element in the pipeline ends its execution after processing the last received packet before receiving close signal from `stdin` channel. 
+Pipeline elements are connected by `ProcessChannel`s, that override their context's default IO. Only the neccessary streams are overriden, so not piped ones are redirected to the channels, that came with the context. Each element in the pipeline ends its execution after processing the last received packet before receiving close signal from `stdin` channel. 
 
 Pipelines are logically divided into three parts: `FROM`, `THROUGH` and `TO`. The api is designed to look seamless, but in order to take full advantage of piping it is necessary to distinguish these parts. Every element can emit some output, but doesn't have to. They also shouldn't close they outputs after execution. It is done automatically by piping engine and ensures that channels used by other entities (such as `stdout`) won't be closed.
 
 Every pipeline starts with single element `FROM` section. It can be `Process`, [lambda](#lambdas-in-pipelines), `File`, `String`, `InputStream`, `ByteReadPacket` or `Channel`. Elements used here receive no input (for processes and lambdas there is `nullin` provided). Then the `THROUGH` or `TO` part occurs. 
-Piping `THROUGH` can be performed on `Process` or [lambda](#lambdas-in-pipelines) and can consist of any number of elements. They receive the input simutanously while the producer is going (due to the limitations of `zt-exec` linbrary `SystemProcess` may wait till the end of input) and can emit output as they go. 
+Piping `THROUGH` can be performed on `Process` or [lambda](#lambdas-in-pipelines) and can consist of any number of elements. They receive the input simutanously while the producer is going (due to the limitations of `zt-exec` library `SystemProcess` may wait till the end of input) and can emit output as they go. 
 Every pipeline is ended with single element `TO` section. Elements here take input, but do not emit any output. If no `TO` element is provided, the `pipeline` builder will implicitly end the pipeline with `stdout`.
 
 ##### piping grammar
