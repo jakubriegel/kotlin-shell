@@ -1,53 +1,59 @@
 # Kotlin Shell
 
 ## about
-Kotlin Shell is a prototype library for performing shell programming in Kotlin and KotlinScript.
+Kotlin Shell is a prototype tool for performing shell programming in Kotlin and KotlinScript.
 It provides shell-like API which takes advantage of Kotlin high level possibilities.
+
+For examples go to the [examples](#examples) section.
 
 ## content
 * [about](#about)
 * [content](#content)
 * [get and run](#get-and-run)
-    + [library](#library)
-    + [scripting](#scripting)
-      - [`kshell` command](#-kshell--command)
-        * [command line](#command-line)
-        * [shebang](#shebang)
-      - [`kotlinc` command](#-kotlinc--command)
+  + [library](#library)
+  + [scripting](#scripting)
+    - [kshell command](#kshell-command)
+      * [command line](#command-line)
+      * [shebang](#shebang)
+    - [kotlinc command](#kotlinc-command)
 * [usage](#usage)
-    + [writing scripts](#writing-scripts)
-      - [in Kotlin code](#in-kotlin-code)
-      - [in Kotlin Script](#in-kotlin-script)
-        * [blocking api](#blocking-api)
-        * [non blocking api](#non-blocking-api)
-    + [processes](#processes)
-      - [creating and starting processes](#creating-and-starting-processes)
-        * [system process](#system-process)
-        * [kts process](#kts-process)
-      - [multiple calls to processes](#multiple-calls-to-processes)
-    + [pipelines](#pipelines)
-    + [creating pipeline](#creating-pipeline)
-    + [using lambdas in pipelines](#using-lambdas-in-pipelines)
-      - [lambdas suitable for piping](#lambdas-suitable-for-piping)
-        * [example](#example)
-    + [detaching](#detaching)
-      - [detaching process](#detaching-process)
-      - [detaching pipeline](#detaching-pipeline)
-      - [attaching](#attaching)
-    + [demonizing](#demonizing)
-    + [environment](#environment)
-      - [system environment](#system-environment)
-      - [shell environment](#shell-environment)
-      - [shell variables](#shell-variables)
-      - [special variables](#special-variables)
-    + [shell commands](#shell-commands)
-      - [implemented shell commands](#implemented-shell-commands)
-      - [shell methods](#shell-methods)
-      - [special properties](#special-properties)
-    + [sub shells](#sub-shells)
-    + [dependencies](#dependencies)
-      - [external dependencies](#external-dependencies)
-      - [internal dependencies](#internal-dependencies)
+  + [writing scripts](#writing-scripts)
+    - [in Kotlin code](#in-kotlin-code)
+    - [in Kotlin Script](#in-kotlin-script)
+      * [blocking api](#blocking-api)
+      * [non blocking api](#non-blocking-api)
+  + [processes](#processes)
+    - [creating and starting processes](#creating-and-starting-processes)
+      * [system process](#system-process)
+      * [kts process](#kts-process)
+    - [multiple calls to processes](#multiple-calls-to-processes)
+  + [pipelines](#pipelines)
+    - [piping logic](#piping-logic)
+      * [introduction](#introduction)
+      * [piping grammar](#piping-grammar)
+    - [creating pipeline](#creating-pipeline)
+    - [forking stderr](#forking-stderr)
+    - [lambdas in pipelines](#lambdas-in-pipelines)
+    - [lambdas suitable for piping](#lambdas-suitable-for-piping)
+      * [example](#example)
+  + [detaching](#detaching)
+    - [detaching process](#detaching-process)
+    - [detaching pipeline](#detaching-pipeline)
+    - [attaching](#attaching)
+  + [demonizing](#demonizing)
+  + [environment](#environment)
+    - [system environment](#system-environment)
+    - [shell environment](#shell-environment)
+    - [shell variables](#shell-variables)
+    - [special variables](#special-variables)
+  + [shell commands](#shell-commands)
+    - [implemented shell commands](#implemented-shell-commands)
+    - [shell methods](#shell-methods)
+    - [special properties](#special-properties)
+  + [sub shells](#sub-shells)
+  + [dependencies](#dependencies)
+    - [external dependencies](#external-dependencies)
+    - [internal dependencies](#internal-dependencies)
 * [examples](#examples)
 
 ## get and run
@@ -75,7 +81,7 @@ Kotlin Shell scripts have `sh.kts` extension.
 
 Some environment variables may be set to customize script execution. Go to the [environment](#environment) section to learn more.
 
-#### `kshell` command
+#### kshell command
 ##### command line
 To run the script type:
 ```
@@ -89,7 +95,7 @@ Kotlin Shell scripts support shebang:
 #!/usr/bin/env kshell
 ```
 
-#### `kotlinc` command
+#### kotlinc command
 A more low level approach is supported with `kotlinc`:
 
 ```
@@ -206,15 +212,44 @@ TO -> PROCESS | LAMBDA | FILE | STRING_BUILDER | OUTPUT_STREAM | BYTE_PACKET_BUI
 ```
 
 #### creating pipeline
-To create the pipeline use `pipeline` block:
+To construct and execute the pipeline use `pipeline` builder:
 ```kotlin
-pipeline { process1 pipe process2 pipe process3 }
+pipeline { a pipe b pipe c }
 ```
 
-Pipeline can be started with `Process`, lambda, `File`, `String`, `ByteReadPacket` or `InputStream`.
+Pipeline can be started with `Process`, lambda, `File`, `String`, `ByteReadPacket` or `InputStream`. Once the pipeline is created it cannot be modified.
+
+The `pipeline` builder takes an optional parameter `mode` of type `ExecutionMode`. It can be used for [detaching](#detaching) or [demonizing](#demonizing) the pipeline. By default it uses `ExecutionMode.ATTACHED`
+```kotlin
+pipeline (ExecutionMode.ATTACHED) { a pipe b pipe c }
+pipeline (ExecutionMode.DETACHED) { a pipe b pipe c }
+pipeline (ExecutionMode.DAEMON) { a pipe b pipe c }
+```
+
+Constructed pipeline can be stored in an object of `Pipeline` type:
+```kotlin
+val p = pipeline { a pipe b }
+```
+
+You can perform several operiations on it:
+* `Pipeline.join()` joins the pipeline
+* `Pipeline.kill()` kill all elements of the pipeline
+
+And access `processes` member, which is a list of all processes in the pipeline.
 
 #### forking stderr
-tba
+To fork `stderr` from pipeline use `forkErr`:
+```kotlin
+pipeline { a pipe b forkErr { /* fork logic */ } pipe c }
+```
+
+it redirects elements error stream to given pipeline. The builder function receives the new error `ProcessReceiveChannel` as an implicit argument. The function should return new `Pipeline`. If this pipeline wont be ended with `TO`, it will implicitly be appended with `stdout`.
+
+The fork logic can be stored in a variable:
+```kotlin
+val fork = pipelineFork { it pipe filter pipe file }
+pipeline { a forkErr fork }
+```
 
 #### lambdas in pipelines
 Basic lambda structure for piping is `PipelineContextLambda`:
@@ -226,15 +261,15 @@ It takes context which consists of `stdin`, `stdout` and `stderr` channels. It c
 The end of input is signalized with closed `stdin`. `PipelineContextLambda` shouldn't close outputs after execution.
 
 #### lambdas suitable for piping
-Most lambdas follow the template `(stdin) -> Pair<stdout, stderr>`
+There are several wrappers for `PipelineContextLambda`, that can make piping easier. Most of them follow the template `(stdin) -> Pair<stdout, stderr>`
 
 name | definition | builder
 --- | --- | --- 
-`PipelineContextLambda` | suspend (ExecutionContext) -> Unit | contextLambda { /* code */ }
-`PipelinePacketLambda` | suspend (ByteReadPacket) -> Pair<ByteReadPacket, ByteReadPacket> | contextLambda { /* code */ }
-`PipelineByteArrayLambda` | suspend (ByteArray) -> Pair<ByteArray, ByteArray> | contextLambda { /* code */ } 
-`PipelineStringLambda` | suspend (String) -> Pair<String, String> | contextLambda { /* code */ }
-`PipelineStreamLambda` | suspend (InputStream, OutputStream, OutputStream) -> Unit | streamLambda { /* code */ }
+`PipelineContextLambda` | suspend (ExecutionContext) -> Unit | contextLambda { }
+`PipelinePacketLambda` | suspend (ByteReadPacket) -> Pair<ByteReadPacket, ByteReadPacket> | packetLambda { }
+`PipelineByteArrayLambda` | suspend (ByteArray) -> Pair<ByteArray, ByteArray> | byteArrayLambda { } 
+`PipelineStringLambda` | suspend (String) -> Pair<String, String> | stringLambda { /* code */ }
+`PipelineStreamLambda` | suspend (InputStream, OutputStream, OutputStream) -> Unit | streamLambda { }
 
 ##### example
 ```kotlin
