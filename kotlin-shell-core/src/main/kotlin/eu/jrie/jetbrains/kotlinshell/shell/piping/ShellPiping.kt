@@ -16,8 +16,8 @@ import eu.jrie.jetbrains.kotlinshell.shell.piping.from.ShellPipingFrom
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 
-typealias PipeConfig =  suspend ShellPiping.() -> Pipeline
-typealias PipelineFork = suspend (ProcessReceiveChannel) -> Unit
+typealias PipelineConfig =  suspend ShellPiping.() -> Pipeline
+typealias PipelineFork = suspend ShellPiping.(ProcessReceiveChannel) -> Pipeline
 
 @ExperimentalCoroutinesApi
 interface ShellPiping : ShellPipingFrom, ShellPipingThrough, ShellPipingTo, ShellUtility {
@@ -28,20 +28,20 @@ interface ShellPiping : ShellPipingFrom, ShellPipingThrough, ShellPipingTo, Shel
     val detachedPipelines: List<Pair<Int, Pipeline>>
 
     /**
-     * Creates and executes new [Pipeline] specified by DSL [pipeConfig] and executes it in given [mode]
+     * Creates and executes new [Pipeline] specified by DSL [pipelineConfig] and executes it in given [mode]
      * Part of piping DSL
      */
-    suspend fun pipeline(mode: ExecutionMode = ExecutionMode.ATTACHED, pipeConfig: PipeConfig) = when (mode) {
-        ExecutionMode.ATTACHED -> pipeConfig().apply { if (!closed) { toDefaultEndChannel(stdout) } } .join()
-        ExecutionMode.DETACHED -> detach(pipeConfig)
+    suspend fun pipeline(mode: ExecutionMode = ExecutionMode.ATTACHED, pipelineConfig: PipelineConfig) = when (mode) {
+        ExecutionMode.ATTACHED -> pipelineConfig().apply { if (!closed) { toDefaultEndChannel(stdout) } } .join()
+        ExecutionMode.DETACHED -> detach(pipelineConfig)
         ExecutionMode.DAEMON -> TODO("implement daemon pipelines")
     }
 
     /**
-     * Creates new [Pipeline] specified by DSL [pipeConfig] and executes it as detached job.
+     * Creates new [Pipeline] specified by DSL [pipelineConfig] and executes it as detached job.
      * Part of piping DSL
      */
-    suspend fun detach(pipeConfig: PipeConfig): Pipeline
+    suspend fun detach(pipelineConfig: PipelineConfig): Pipeline
 
     /**
      * Attaches selected [Pipeline]
@@ -63,8 +63,11 @@ interface ShellPiping : ShellPipingFrom, ShellPipingThrough, ShellPipingTo, Shel
         forkStdErr(
             process,
             Channel<ProcessChannelUnit>(env(PIPELINE_CHANNEL_BUFFER_SIZE).toInt()).also {
-                fork(it)
-                process.afterJoin = { it.close() }
+                val forked = fork(it).apply { if (!closed) { toDefaultEndChannel(stdout) } }
+                process.afterJoin = {
+                    it.close()
+                    forked.join()
+                }
             }
         )
     }
@@ -72,6 +75,8 @@ interface ShellPiping : ShellPipingFrom, ShellPipingThrough, ShellPipingTo, Shel
     private fun forkStdErr(process: ProcessExecutable, channel: ProcessSendChannel) {
         process.updateStdErr(channel)
     }
+
+    fun pipelineFork(fork: PipelineFork) = fork
 
     /**
      * Forks current [Pipeline] by creating new [Pipeline] with stderr from last process as an input

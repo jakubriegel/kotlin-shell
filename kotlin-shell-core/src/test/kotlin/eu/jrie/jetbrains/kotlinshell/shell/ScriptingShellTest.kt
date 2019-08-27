@@ -2,7 +2,7 @@ package eu.jrie.jetbrains.kotlinshell.shell
 
 import eu.jrie.jetbrains.kotlinshell.processes.execution.ProcessExecutable
 import eu.jrie.jetbrains.kotlinshell.processes.process.Process
-import eu.jrie.jetbrains.kotlinshell.shell.piping.PipeConfig
+import eu.jrie.jetbrains.kotlinshell.shell.piping.PipelineConfig
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.just
@@ -129,7 +129,7 @@ class ScriptingShellTest {
     @Test
     fun `should map pipeline to shell`() {
         // given
-        val configMock = mockk<PipeConfig>()
+        val configMock = mockk<PipelineConfig>()
 
         // when
         scriptingShell.pipeline(configMock)

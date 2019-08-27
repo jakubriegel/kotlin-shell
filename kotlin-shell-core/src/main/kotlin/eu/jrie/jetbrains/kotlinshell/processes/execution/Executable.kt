@@ -36,7 +36,7 @@ class ProcessExecutable (
     private val builder: ProcessBuilder
 ) : Executable(context) {
     lateinit var process: Process
-    internal var afterJoin: () -> Unit = {}
+    internal var afterJoin: suspend () -> Unit = {}
 
     override fun init() = with(context as ProcessExecutionContext) {
         builder

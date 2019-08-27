@@ -14,7 +14,7 @@ import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.DEFAULT_SYSTEM_PR
 import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.PIPELINE_CHANNEL_BUFFER_SIZE
 import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.PIPELINE_RW_PACKET_SIZE
 import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE
-import eu.jrie.jetbrains.kotlinshell.shell.piping.PipeConfig
+import eu.jrie.jetbrains.kotlinshell.shell.piping.PipelineConfig
 import eu.jrie.jetbrains.kotlinshell.shell.piping.ShellPiping
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -161,7 +161,7 @@ open class Shell protected constructor (
         logger.debug("detached $it")
     }
 
-    override suspend fun detach(pipeConfig: PipeConfig) = this.pipeConfig()
+    override suspend fun detach(pipelineConfig: PipelineConfig) = this.pipelineConfig()
         .apply { if (!closed) { toDefaultEndChannel(stdout) } }
         .also {
             val job = scope.launch { it.join() }
