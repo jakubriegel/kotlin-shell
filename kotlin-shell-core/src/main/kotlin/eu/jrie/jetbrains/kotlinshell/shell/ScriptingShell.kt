@@ -3,7 +3,7 @@ package eu.jrie.jetbrains.kotlinshell.shell
 import eu.jrie.jetbrains.kotlinshell.processes.execution.Executable
 import eu.jrie.jetbrains.kotlinshell.processes.execution.ProcessExecutable
 import eu.jrie.jetbrains.kotlinshell.processes.process.Process
-import eu.jrie.jetbrains.kotlinshell.shell.piping.PipeConfig
+import eu.jrie.jetbrains.kotlinshell.shell.piping.PipelineConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope
@@ -109,7 +109,7 @@ open class ScriptingShell internal constructor (
     /**
      * @see Shell.pipeline
      */
-    fun pipeline(pipeConfig: PipeConfig) = blocking { shell.pipeline(ExecutionMode.ATTACHED, pipeConfig) }
+    fun pipeline(pipelineConfig: PipelineConfig) = blocking { shell.pipeline(ExecutionMode.ATTACHED, pipelineConfig) }
 
     /**
      * Executes suspending script with all [Shell] API available
