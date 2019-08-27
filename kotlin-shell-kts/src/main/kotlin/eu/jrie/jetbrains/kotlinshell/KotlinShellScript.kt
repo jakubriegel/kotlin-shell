@@ -5,6 +5,7 @@ import eu.jrie.jetbrains.kotlinshell.processes.process.Process
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessState
 import eu.jrie.jetbrains.kotlinshell.processes.process.system.SystemProcess
 import eu.jrie.jetbrains.kotlinshell.shell.ScriptingShell
+import eu.jrie.jetbrains.kotlinshell.shell.Shell
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.jetbrains.kotlin.mainKts.MainKtsConfigurator
 import org.jetbrains.kotlin.script.util.DependsOn
@@ -69,6 +70,7 @@ class KotlinShellScriptConfiguration : ScriptCompilationConfiguration (
 ) {
     companion object {
         private val ESSENTIAL_KOTLIN_SHELL_CLASSES = arrayOf(
+            Shell::class,
             Process::class, SystemProcess::class, ProcessState::class,
             Pipeline::class
         )
@@ -84,8 +86,11 @@ class KotlinShellScriptConfiguration : ScriptCompilationConfiguration (
             "eu.jrie.jetbrains.kotlinshell.shell.piping.PipelineStringLambda",
             "eu.jrie.jetbrains.kotlinshell.shell.piping.PipelineStreamLambda",
 
+            "eu.jrie.jetbrains.kotlinshell.shell.ShellCommand",
+
             "eu.jrie.jetbrains.kotlinshell.shell.up",
             "eu.jrie.jetbrains.kotlinshell.shell.pre",
+            "eu.jrie.jetbrains.kotlinshell.shell.readonly",
             "eu.jrie.jetbrains.kotlinshell.shell.piping.it",
 
             "kotlinx.coroutines.channels.Channel",

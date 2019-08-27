@@ -334,8 +334,9 @@ To attach detached job (process or pipeline) use `fg()`:
 To join all detached jobs call `joinDetached()`
 
 ### demonizing
-At the current stage demonizing processes and pipelines is implemented in very unstable and experimental way. 
-Though it should not be used. 
+> At the current stage demonizing processes and pipelines is implemented in very unstable and experimental way. 
+> 
+> Though it should not be used. 
 
 ### environment
 Environment in Kotlin Shell is divided into two parts `shell environment` and `shell variables`. The environment from system is also inherited
@@ -344,13 +345,13 @@ To access the environment call:
 * `environment` list or `env` command for `shell environment`
 * `variables` list for `shell variables`
 * `shellEnv` or `set` command for combined environment
-* `systemEnv` for environment inherited from system
+* `systemEnv` for the environment inherited from system
 
 #### system environment
 `system environment` is copied to `shell environment` at its creation. To access system environment any time call `systemEnv`
 
 #### shell environment
-`shell environment` is inherited by `Shell` from system. It can be modified and is copied to sub shells.
+`shell environment` is inherited by `Shell` from the system. It can be modified and is copied to sub shells.
 
 To set environment use `export`:
 ```kotlin
@@ -425,7 +426,6 @@ pipeline { cmd pipe process }
 
 #### implemented shell commands
 * `&` as `detach`
-* `bg`
 * `cd` with `cd(up)` for `cd ..` and `cd(pre)` for `cd -`
 * `env`
 * `exit` as `return@shell`
@@ -435,6 +435,7 @@ pipeline { cmd pipe process }
 * `mkdir`
 * `print` and `echo` as `print()`/`println()`
 * `ps`
+* `readonly`
 * `set`
 * `unset`
 * setting shell variable as `variable`
@@ -443,6 +444,24 @@ pipeline { cmd pipe process }
 `Shell` member functions provide easy ways for performing popular shell tasks:
 * `file()` - gets or creates file relative to current directory
 
+#### custom shell commands
+To implement custom shell command create extension member of Shell class and override its getter:
+```kotlin
+val Shell.cmd: ShellCommand
+    get() = command {
+        /* command implementation returning String */
+    }
+```
+
+such command can be declared outside `shell` block and be used as [dependency](#internal-dependencies).
+
+#### custom shell methods 
+To implement custom shell method use the basic function template:
+```kotlin
+suspend fun Shell.() -> T
+```
+
+where `T` is desired return type or `Unit`. Such functions can be declared outside `shell` block and be used as [dependency](#internal-dependencies).
 
 #### special properties
 `Shell` members provide easy Kotlin-like access to popular parameters:

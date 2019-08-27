@@ -2,15 +2,15 @@
 
 package eu.jrie.jetbrains.kotlinshell.shell
 
+import eu.jrie.jetbrains.kotlinshell.processes.execution.ExecutionContext
 import eu.jrie.jetbrains.kotlinshell.processes.execution.ProcessExecutionContext
-import eu.jrie.jetbrains.kotlinshell.processes.pipeline.PipelineContextLambda
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.io.core.buildPacket
 import kotlinx.io.core.writeText
 import java.io.File
 
-typealias ShellCommand = PipelineContextLambda
+typealias ShellCommand = suspend (ExecutionContext) -> Unit
 
 @Suppress("PropertyName")
 @ExperimentalCoroutinesApi
@@ -40,13 +40,16 @@ interface ShellBase : ProcessExecutionContext {
      */
     val directory: File
 
-    suspend operator fun ShellCommand.invoke() = this.invoke(this@ShellBase)
-
-    fun command(block: ShellBase.() -> String): PipelineContextLambda = {
+    /**
+     * Creates command, that can be piped or executed inside shell
+     */
+    fun command(block: suspend ShellBase.() -> String): ShellCommand = {
         it.stdout.send(
             buildPacket { writeText(this@ShellBase.block()) }
         )
     }
+
+    suspend operator fun ShellCommand.invoke() = this.invoke(this@ShellBase)
 
     suspend fun finalize()
 
