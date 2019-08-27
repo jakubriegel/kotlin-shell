@@ -49,13 +49,14 @@ For examples go to the [examples](#examples) section.
   + [shell commands](#shell-commands)
     - [implemented shell commands](#implemented-shell-commands)
     - [shell methods](#shell-methods)
+    - [custom shell commands](#custom-shell-commands)
+    - [custom shell methods](#custom-shell-methods)
     - [special properties](#special-properties)
   + [sub shells](#sub-shells)
   + [dependencies](#dependencies)
     - [external dependencies](#external-dependencies)
     - [internal dependencies](#internal-dependencies)
 * [examples](#examples)
-
 ## get and run
 ### library
 [![library](https://api.bintray.com/packages/jakubriegel/kotlin-shell/kotlin-shell-core/images/download.svg) ](https://bintray.com/jakubriegel//kotlin-shell/kotlin-shell-core/_latestVersion)
