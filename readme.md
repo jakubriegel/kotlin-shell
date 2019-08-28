@@ -240,7 +240,7 @@ And access `processes` member, which is a list of all processes in the pipeline.
 #### forking stderr
 To fork `stderr` from process or lambda use `forkErr`:
 ```kotlin
-pipeline { a pipe b forkErr { /* fork logic */ } pipe c }
+pipeline { a pipe (b forkErr { /* fork logic */ }) pipe c }
 ```
 
 it redirects elements error stream to given pipeline. 

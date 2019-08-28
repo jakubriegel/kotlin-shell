@@ -1,5 +1,6 @@
 package eu.jrie.jetbrains.kotlinshell.shell.piping
 
+import eu.jrie.jetbrains.kotlinshell.processes.execution.ExecutionContext
 import eu.jrie.jetbrains.kotlinshell.processes.execution.ProcessExecutable
 import eu.jrie.jetbrains.kotlinshell.processes.pipeline.Pipeline
 import eu.jrie.jetbrains.kotlinshell.processes.pipeline.PipelineContextLambda
@@ -53,11 +54,15 @@ interface ShellPipingThrough : ShellPipingTo {
     fun packetLambda(
         lambda: PipelinePacketLambda
     ) = contextLambda { ctx ->
-        ctx.stdin.consumeEach { packet ->
-            val out = lambda(packet)
-            ctx.stdout.send(out.first)
-            ctx.stderr.send(out.second)
+        with(ctx.stdin) {
+            if(isClosedForReceive) processPacket(lambda(emptyPacket()), ctx)
+            else consumeEach { processPacket(lambda(it), ctx) }
         }
+    }
+
+    private suspend inline fun processPacket(out: Pair<ByteReadPacket, ByteReadPacket>, ctx: ExecutionContext) {
+        ctx.stdout.send(out.first)
+        ctx.stderr.send(out.second)
     }
 
     /**
