@@ -60,7 +60,7 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
             testEnv = env
         ) {
             "chmod +x ${file.name}"()
-            "./${file.name}".process() pipe storeResult
+            pipeline { "./${file.name}".process() pipe storeResult }
         }
 
         // then
@@ -79,7 +79,7 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
             testEnv = env
         ) {
             val echo = systemProcess { cmd { "echo" withArg env(variable) } }
-            echo pipe storeResult
+            pipeline { echo pipe storeResult }
         }
 
         // then
@@ -114,7 +114,7 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
             testDir = givenDir
         ) {
             shell (dir = subDir) {
-                "ls".process() pipe storeResult
+                pipeline { "ls".process() pipe storeResult }
             }
         }
 
@@ -144,7 +144,7 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
             shell (
                 vars = newVars
             ) {
-                "./${file.name}".process() pipe storeResult
+                pipeline { "./${file.name}".process() pipe storeResult }
             }
         }
 
@@ -166,11 +166,9 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
         shell (
             testEnv = env
         ) {
-
             "chmod +x ${file.name}"()
-
             shell {
-                "./${file.name}".process() pipe storeResult
+                pipeline { "./${file.name}".process() pipe storeResult }
             }
         }
 
@@ -229,13 +227,11 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
 
         // when
         shell {
-
             export(variable to value)
 
             "chmod +x ${file.name}"()
-
             shell {
-                "./${file.name}".process() pipe storeResult
+                pipeline { "./${file.name}".process() pipe storeResult }
             }
         }
 
@@ -269,12 +265,10 @@ class ShellIntegrationTest : ProcessBaseIntegrationTest() {
 
         // when
         shell {
-
             variable(variable to value)
 
             "chmod +x ${file.name}"()
-
-            "./${file.name}".process() pipe storeResult
+            pipeline { "./${file.name}".process() pipe storeResult }
         }
 
         // then

@@ -15,6 +15,7 @@ import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.PIPELINE_CHANNEL_
 import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.PIPELINE_RW_PACKET_SIZE
 import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.SYSTEM_PROCESS_INPUT_STREAM_BUFFER_SIZE
 import eu.jrie.jetbrains.kotlinshell.shell.piping.PipelineConfig
+import eu.jrie.jetbrains.kotlinshell.shell.piping.ShellForking
 import eu.jrie.jetbrains.kotlinshell.shell.piping.ShellPiping
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -33,7 +34,7 @@ open class Shell protected constructor (
     final override val commander: ProcessCommander,
     final override val stdout: ProcessSendChannel,
     final override val stderr: ProcessSendChannel
-) : ShellPiping, ShellProcess, ShellUtility {
+) : ShellForking, ShellPiping, ShellProcess, ShellUtility {
 
     protected constructor (
         environment: Map<String, String>,
@@ -161,7 +162,7 @@ open class Shell protected constructor (
         logger.debug("detached $it")
     }
 
-    override suspend fun detach(pipelineConfig: PipelineConfig) = this.pipelineConfig()
+    override suspend fun detach(pipelineConfig: PipelineConfig) = PipingDSLShell(environment, variables, directory, scope, commander, stdout, stderr).pipelineConfig()
         .apply { if (!closed) { toDefaultEndChannel(stdout) } }
         .also {
             val job = scope.launch { it.join() }
@@ -270,5 +271,11 @@ open class Shell protected constructor (
         private fun assertDir(dir: File) = dir.also { assert(it.isDirectory) }
 
         internal val logger = LoggerFactory.getLogger(Shell::class.java)
+    }
+
+    override suspend fun pipeline(mode: ExecutionMode, pipelineConfig: PipelineConfig) = when (mode) {
+        ExecutionMode.ATTACHED -> PipingDSLShell.from(this).pipelineConfig().apply { if (!closed) { toDefaultEndChannel(stdout) } } .join()
+        ExecutionMode.DETACHED -> detach(pipelineConfig)
+        ExecutionMode.DAEMON -> TODO("implement daemon pipelines")
     }
 }

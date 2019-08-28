@@ -86,7 +86,7 @@ class PipingIntegrationTest : PipingBaseIntegrationTest() {
                 cmd { "wc" withArg "-m" }
             }
 
-            file pipe grep pipe wc pipe resultFile
+            pipeline { file pipe grep pipe wc pipe resultFile }
         }
 
         // then
@@ -146,7 +146,7 @@ class PipingIntegrationTest : PipingBaseIntegrationTest() {
             val cat = systemProcess { cmd = "cat" }
             val grep = systemProcess { cmd { "grep" withArg pattern } }
 
-            (script forkErr nullout) pipe cat pipe grep pipe storeResult
+            pipeline { (script forkErr nullout) pipe cat pipe grep pipe storeResult }
         }
 
         // then
@@ -203,11 +203,12 @@ class PipingIntegrationTest : PipingBaseIntegrationTest() {
                 cmd { "grep" withArg "c" }
             }
 
-            from(echo)
-                .throughProcess(grep)
-                .throughProcess(systemProcess { cmd = "cat" })
-                .throughLambda { storeResult(it) }
-                .join()
+            pipeline {
+                from(echo)
+                    .throughProcess(grep)
+                    .throughProcess(systemProcess { cmd = "cat" })
+                    .throughLambda { storeResult(it) }
+            }
         }
 
         // then
