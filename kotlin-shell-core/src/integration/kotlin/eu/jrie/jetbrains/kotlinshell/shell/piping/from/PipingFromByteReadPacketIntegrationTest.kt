@@ -131,9 +131,10 @@ class PipingFromByteReadPacketIntegrationTest : PipingBaseIntegrationTest() {
     fun `should start pipeline from packet with java like api`() {
         // when
         shell {
-            from(packet.inputStream())
-                .throughLambda { storeResult(it) }
-                .join()
+            pipeline {
+                from(packet.inputStream())
+                    .throughLambda { storeResult(it) }
+            }.join()
         }
 
         // then

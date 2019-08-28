@@ -144,9 +144,10 @@ class PipingFromProcessIntegrationTest : PipingBaseIntegrationTest() {
     fun `should start pipeline from process with java like api`() {
         // when
         shell {
-            from(echo)
-                .throughLambda { storeResult(it) }
-                .join()
+            pipeline {
+                from(echo)
+                    .throughLambda { storeResult(it) }
+            } .join()
         }
 
         // then

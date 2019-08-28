@@ -139,9 +139,10 @@ class PipingFromChannelIntegrationTest : PipingBaseIntegrationTest() {
     fun `should start pipeline from channel with java like api`() {
         // when
         shell {
-            from(channel)
-                .throughLambda { storeResult(it) }
-                .join()
+            pipeline {
+                from(channel)
+                    .throughLambda { storeResult(it) }
+            }.join()
         }
 
         // then

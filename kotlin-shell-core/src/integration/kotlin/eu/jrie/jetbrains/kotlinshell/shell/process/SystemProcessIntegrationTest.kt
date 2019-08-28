@@ -18,11 +18,13 @@ class SystemProcessIntegrationTest : ProcessBaseIntegrationTest() {
     fun `should execute "echo hello world"`() {
         // when
         shell {
-            systemProcess {
+            val echo = systemProcess {
                 cmd {
                     "echo" withArgs listOf("hello", "world")
                 }
-            } pipe storeResult
+            }
+
+            pipeline { echo pipe storeResult }
         }
 
         // then

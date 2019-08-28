@@ -31,7 +31,7 @@ interface ShellPipingFromStream : ShellPipingFromLambda {
      */
     suspend fun fromUse(stream: InputStream) = from(stream.useFully())
 
-    private fun InputStream.readFully() = contextLambda {
+    private fun InputStream.readFully(): PipelineContextLambda = {
         val size = env(PIPELINE_RW_PACKET_SIZE).toLong()
         try {
             do {
@@ -41,7 +41,7 @@ interface ShellPipingFromStream : ShellPipingFromLambda {
         } catch (e: EOFException) {}
     }
 
-    private fun InputStream.useFully() = contextLambda { ctx ->
+    private fun InputStream.useFully(): PipelineContextLambda = { ctx ->
         use { readFully().invoke(ctx) }
     }
 

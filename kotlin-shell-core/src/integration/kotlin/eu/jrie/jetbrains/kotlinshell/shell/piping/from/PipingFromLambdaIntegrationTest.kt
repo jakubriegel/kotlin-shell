@@ -134,9 +134,10 @@ class PipingFromLambdaIntegrationTest : PipingBaseIntegrationTest() {
     fun `should start pipeline from lambda with java like api`() {
         // when
         shell {
-            from(lambda)
-                .throughLambda { storeResult(it) }
-                .join()
+            pipeline {
+                from(lambda)
+                    .throughLambda { storeResult(it) }
+            }.join()
         }
 
         // then

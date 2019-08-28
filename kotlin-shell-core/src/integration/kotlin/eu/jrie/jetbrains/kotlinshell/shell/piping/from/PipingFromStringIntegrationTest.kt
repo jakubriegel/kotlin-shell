@@ -130,9 +130,10 @@ class PipingFromStringIntegrationTest : PipingBaseIntegrationTest() {
     fun `should start pipeline from string with java like api`() {
         // when
         shell {
-            from(string.byteInputStream())
-                .throughLambda { storeResult(it) }
-                .join()
+            pipeline {
+                from(string.byteInputStream())
+                    .throughLambda { storeResult(it) }
+            }.join()
         }
 
         // then

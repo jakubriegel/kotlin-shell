@@ -136,9 +136,10 @@ class PipingFromFileIntegrationTest : PipingBaseIntegrationTest() {
     fun `should start pipeline from file with java like api`() {
         // when
         shell {
-            from(file.inputStream())
-                .throughLambda { storeResult(it) }
-                .join()
+            pipeline {
+                from(file.inputStream())
+                    .throughLambda { storeResult(it) }
+            }.join()
         }
 
         // then
