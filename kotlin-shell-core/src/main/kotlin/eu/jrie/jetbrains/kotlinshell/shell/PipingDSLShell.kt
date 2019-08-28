@@ -16,4 +16,8 @@ internal class PipingDSLShell (
     commander: ProcessCommander,
     stdout: ProcessSendChannel,
     stderr: ProcessSendChannel
-) : AbstractPipingDSLShell, Shell(environment, variables, directory, scope, commander, stdout, stderr)
+) : AbstractPipingDSLShell, Shell(environment, variables, directory, scope, commander, stdout, stderr) {
+    companion object {
+        fun from(shell: ShellBase) = with(shell) { PipingDSLShell(environment, variables, directory, scope, commander, stdout, stderr) }
+    }
+}

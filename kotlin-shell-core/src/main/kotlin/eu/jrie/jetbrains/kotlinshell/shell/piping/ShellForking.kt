@@ -21,11 +21,10 @@ interface ShellForking : ShellPiping {
         get() = Channel(env(ShellBase.PIPELINE_CHANNEL_BUFFER_SIZE).toInt())
 
     private suspend fun forkStdErr(process: ProcessExecutable, fork: PipelineFork) {
-        val shell = PipingDSLShell(environment, variables, directory, scope, commander, stdout, stderr)
         forkStdErr(
             process,
             newStderr.also {
-                val forked = shell.fork(it).apply {
+                val forked = PipingDSLShell.from(this).fork(it).apply {
                     if (!closed) {
                         toDefaultEndChannel(stdout)
                     }
@@ -83,8 +82,7 @@ interface ShellForking : ShellPiping {
      */
     suspend infix fun PipelineContextLambda.forkErr(fork: PipelineFork): PipelineContextLambda = { ctx ->
         newStderr.let { channel ->
-            val shell = PipingDSLShell(environment, variables, directory, scope, commander, stdout, stderr)
-            shell.fork(channel)
+            PipingDSLShell.from(this@ShellForking).fork(channel)
                 .apply { if (!closed) toDefaultEndChannel(stdout) }
                 .also { forkStdErr(this, LambdaForkExecutionContext(ctx, channel)) }
                 .join()

@@ -274,7 +274,7 @@ open class Shell protected constructor (
     }
 
     override suspend fun pipeline(mode: ExecutionMode, pipelineConfig: PipelineConfig) = when (mode) {
-        ExecutionMode.ATTACHED -> PipingDSLShell(environment, variables, directory, scope, commander, stdout, stderr).pipelineConfig().apply { if (!closed) { toDefaultEndChannel(stdout) } } .join()
+        ExecutionMode.ATTACHED -> PipingDSLShell.from(this).pipelineConfig().apply { if (!closed) { toDefaultEndChannel(stdout) } } .join()
         ExecutionMode.DETACHED -> detach(pipelineConfig)
         ExecutionMode.DAEMON -> TODO("implement daemon pipelines")
     }
