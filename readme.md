@@ -239,18 +239,39 @@ You can perform several operiations on it:
 And access `processes` member, which is a list of all processes in the pipeline.
 
 #### forking stderr
-To fork `stderr` from pipeline use `forkErr`:
+To fork `stderr` from process or lambda use `forkErr`:
 ```kotlin
 pipeline { a pipe b forkErr { /* fork logic */ } pipe c }
 ```
 
-it redirects elements error stream to given pipeline. The builder function receives the new error `ProcessReceiveChannel` as an implicit argument. The function should return new `Pipeline`. If this pipeline wont be ended with `TO`, it will implicitly be appended with `stdout`.
+it redirects elements error stream to given pipeline. 
+
+The builder function receives the new error `ProcessReceiveChannel` as an implicit argument. 
+The function should return new `Pipeline`. If this pipeline wont be ended with `TO`, it will implicitly be appended with `stdout`.
 
 The fork logic can be stored in a variable:
 ```kotlin
 val fork = pipelineFork { it pipe filter pipe file }
 pipeline { a forkErr fork }
 ```
+
+The fork belongs to process executable or lambda itself so it can be used outside pipeline as well:
+```kotlin
+val process = "cmd arg".process() forkErr { /* fork */ }
+process()
+```
+
+```kotlin
+val lambda = stringLambda { /* lambda */ } forkErr { /* fork */ }
+pipeline { lambda pipe { /* ... */} }
+```
+
+As a shorthand it is possible to fork error directly to given channel:
+```kotlin
+val channel: ProcessChannel = Channel()
+val b = a forkErr channel
+```
+
 
 #### lambdas in pipelines
 Basic lambda structure for piping is `PipelineContextLambda`:

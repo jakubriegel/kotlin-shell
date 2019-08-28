@@ -91,7 +91,6 @@ class KotlinShellScriptConfiguration : ScriptCompilationConfiguration (
             "eu.jrie.jetbrains.kotlinshell.shell.up",
             "eu.jrie.jetbrains.kotlinshell.shell.pre",
             "eu.jrie.jetbrains.kotlinshell.shell.readonly",
-            "eu.jrie.jetbrains.kotlinshell.shell.piping.it",
 
             "kotlinx.coroutines.channels.Channel",
             "kotlinx.coroutines.delay"

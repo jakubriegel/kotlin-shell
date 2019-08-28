@@ -3,10 +3,12 @@
 package eu.jrie.jetbrains.kotlinshell.shell.piping
 
 import eu.jrie.jetbrains.kotlinshell.processes.ProcessCommander
+import eu.jrie.jetbrains.kotlinshell.processes.execution.ExecutionContext
 import eu.jrie.jetbrains.kotlinshell.processes.execution.ProcessExecutable
 import eu.jrie.jetbrains.kotlinshell.processes.execution.ProcessExecutionContext
 import eu.jrie.jetbrains.kotlinshell.processes.pipeline.Pipeline
-import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessChannelUnit
+import eu.jrie.jetbrains.kotlinshell.processes.pipeline.PipelineContextLambda
+import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessChannel
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessReceiveChannel
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
 import eu.jrie.jetbrains.kotlinshell.shell.ExecutionMode
@@ -48,21 +50,13 @@ interface ShellPiping : ShellPipingFrom, ShellPipingThrough, ShellPipingTo, Shel
      */
     suspend fun fg(pipeline: Pipeline)
 
-    /**
-     * Awaits this [Pipeline]
-     * Part of piping DSL
-     *
-     * @see Pipeline.join
-     * @return this [Pipeline]
-     */
-    @Suppress("UNUSED_PARAMETER")
-    @ExperimentalCoroutinesApi
-    suspend infix fun Pipeline.join(it: Now) = join()
+    private val newStderr: ProcessChannel
+        get() = Channel(env(PIPELINE_CHANNEL_BUFFER_SIZE).toInt())
 
-    private suspend fun forkStdErr(process: ProcessExecutable, fork: PipelineFork) {
+        private suspend fun forkStdErr(process: ProcessExecutable, fork: PipelineFork) {
         forkStdErr(
             process,
-            Channel<ProcessChannelUnit>(env(PIPELINE_CHANNEL_BUFFER_SIZE).toInt()).also {
+            newStderr.also {
                 val forked = fork(it).apply { if (!closed) { toDefaultEndChannel(stdout) } }
                 process.afterJoin = {
                     it.close()
@@ -76,10 +70,18 @@ interface ShellPiping : ShellPipingFrom, ShellPipingThrough, ShellPipingTo, Shel
         process.updateStdErr(channel)
     }
 
+    private suspend fun forkStdErr(lambda: PipelineContextLambda, context: LambdaForkExecutionContext) {
+        lambda.invoke(context)
+        context.stderr.close()
+    }
+
+    /**
+     * Builds pipeline for forked stream
+     */
     fun pipelineFork(fork: PipelineFork) = fork
 
     /**
-     * Forks current [Pipeline] by creating new [Pipeline] with stderr from last process as an input
+     * Forks stderr of process by creating new [Pipeline] with stderr from last process as an input
      * Part of piping DSL
      *
      * @return this [ProcessBuilder]
@@ -89,7 +91,7 @@ interface ShellPiping : ShellPipingFrom, ShellPipingThrough, ShellPipingTo, Shel
     }
 
     /**
-     * Forks current [Pipeline] by creating new [Pipeline] with stderr from last process as an input
+     * Forks stderr of process by pumping it to given [channel]
      * Part of piping DSL
      *
      * @return this [ProcessBuilder]
@@ -98,7 +100,41 @@ interface ShellPiping : ShellPipingFrom, ShellPipingThrough, ShellPipingTo, Shel
         forkStdErr(this, channel)
     }
 
-    private class ForkErrorExecutionContext (
+    /**
+     * Forks stderr of lambda by creating new [Pipeline] with stderr from last process as an input
+     * Part of piping DSL
+     *
+     * @return this [ProcessBuilder]
+     */
+    suspend infix fun PipelineContextLambda.forkErr(fork: PipelineFork): PipelineContextLambda = { ctx ->
+        newStderr.let { channel ->
+            fork(channel)
+                .apply { if (!closed) toDefaultEndChannel(stdout) }
+                .also { forkStdErr(this, LambdaForkExecutionContext(ctx, channel)) }
+                .join()
+        }
+    }
+
+    /**
+     * Forks stderr of lambda by pumping it to given [channel]
+     * Part of piping DSL
+     *
+     * @return this [ProcessBuilder]
+     */
+    suspend infix fun PipelineContextLambda.forkErr(channel: ProcessSendChannel): PipelineContextLambda = {
+        forkStdErr(this, LambdaForkExecutionContext(it, channel))
+    }
+
+    private class LambdaForkExecutionContext (
+        override val stdin: ProcessReceiveChannel,
+        override val stdout: ProcessSendChannel,
+        override val stderr: ProcessSendChannel
+    ) : ExecutionContext {
+        constructor(from: ExecutionContext, stderr: ProcessSendChannel)
+                : this(from.stdin, from.stdout, stderr)
+    }
+
+    private class ProcessForkExecutionContext (
         override val stdin: ProcessReceiveChannel,
         override val stdout: ProcessSendChannel,
         override val stderr: ProcessSendChannel,
@@ -109,20 +145,6 @@ interface ShellPiping : ShellPipingFrom, ShellPipingThrough, ShellPipingTo, Shel
     }
 
     private fun ProcessExecutable.updateStdErr(err: ProcessSendChannel) {
-        this.context = ForkErrorExecutionContext(this.context as ProcessExecutionContext, err)
+        this.context = ProcessForkExecutionContext(this.context as ProcessExecutionContext, err)
     }
 }
-
-/**
- * Object for [now] alias
- */
-object Now
-/**
- * Alias to be used in piping DSL with [Pipeline.join]
- *
- * Ex: `p1 pipe p2 join now`
- *
- * @see ShellPiping
- * @see Pipeline
- */
-typealias now = Now

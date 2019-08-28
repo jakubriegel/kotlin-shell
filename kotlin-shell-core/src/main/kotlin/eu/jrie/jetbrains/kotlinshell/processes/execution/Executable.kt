@@ -7,14 +7,15 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 abstract class Executable (
     internal var context: ExecutionContext
 ) {
+    internal var afterJoin: suspend () -> Unit = {}
+
     internal open fun init() = Unit
-
     internal abstract suspend fun exec()
-
-    internal open suspend fun join() = Unit
+    internal open suspend fun join() {
+        afterJoin()
+    }
 
     suspend operator fun invoke() = invoke(context)
-
     suspend operator fun invoke(context: ExecutionContext) {
         this.context = context
         init()
@@ -36,7 +37,7 @@ class ProcessExecutable (
     private val builder: ProcessBuilder
 ) : Executable(context) {
     lateinit var process: Process
-    internal var afterJoin: suspend () -> Unit = {}
+
 
     override fun init() = with(context as ProcessExecutionContext) {
         builder

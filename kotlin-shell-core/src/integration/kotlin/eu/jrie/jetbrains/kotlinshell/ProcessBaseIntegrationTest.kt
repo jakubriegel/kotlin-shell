@@ -22,7 +22,7 @@ abstract class ProcessBaseIntegrationTest : BaseIntegrationTest() {
 
     protected fun readResult() = resultBuilder.build().readText()
 
-    private var printScriptMessage = "hello"
+    private val printScriptMessage = "hello"
     private val printScriptErrorMessage: String
             get() = "${printScriptMessage}_error"
 
