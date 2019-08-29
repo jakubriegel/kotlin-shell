@@ -1,10 +1,13 @@
 # Kotlin Shell
 
 ## about
-Kotlin Shell is a prototype tool for performing shell programming in Kotlin and KotlinScript.
-It provides shell-like API which takes advantage of Kotlin high level possibilities.
+Kotlin Shell is a prototype tool for performing shell programming in Kotlin and Kotlin script.
+It provides shell-like API which takes advantage of Kotlin features.
 
 For examples go to the [examples](#examples) section.
+
+## hello world
+example
 
 ## content
 * [about](#about)
@@ -57,7 +60,14 @@ For examples go to the [examples](#examples) section.
     - [external dependencies](#external-dependencies)
     - [internal dependencies](#internal-dependencies)
 * [examples](#examples)
-## get and run
+
+## pre
+- supported platforms
+- tested platforms
+- Windows?
+
+
+## how run scripts
 ### library
 [![library](https://api.bintray.com/packages/jakubriegel/kotlin-shell/kotlin-shell-core/images/download.svg) ](https://bintray.com/jakubriegel//kotlin-shell/kotlin-shell-core/_latestVersion)
 
