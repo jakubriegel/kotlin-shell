@@ -1,5 +1,7 @@
 package eu.jrie.jetbrains.kotlinshell
 
+import eu.jrie.jetbrains.kotlinshell.processes.execution.ExecutionContext
+import eu.jrie.jetbrains.kotlinshell.processes.execution.ProcessExecutable
 import eu.jrie.jetbrains.kotlinshell.processes.pipeline.Pipeline
 import eu.jrie.jetbrains.kotlinshell.processes.process.Process
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessState
@@ -71,7 +73,8 @@ class KotlinShellScriptConfiguration : ScriptCompilationConfiguration (
     companion object {
         private val ESSENTIAL_KOTLIN_SHELL_CLASSES = arrayOf(
             Shell::class,
-            Process::class, SystemProcess::class, ProcessState::class,
+            ExecutionContext::class,
+            Process::class, SystemProcess::class, ProcessState::class, ProcessExecutable::class,
             Pipeline::class
         )
         private val ESSENTIAL_KOTLIN_SHELL_IMPORTS = arrayOf(
@@ -93,7 +96,19 @@ class KotlinShellScriptConfiguration : ScriptCompilationConfiguration (
             "eu.jrie.jetbrains.kotlinshell.shell.readonly",
 
             "kotlinx.coroutines.channels.Channel",
-            "kotlinx.coroutines.delay"
+            "kotlinx.coroutines.delay",
+            "kotlinx.coroutines.channels.consumeEach",
+            "kotlinx.coroutines.delay",
+
+            "java.io.OutputStream",
+            "java.io.InputStream",
+
+            "kotlinx.io.core.ByteReadPacket",
+            "kotlinx.io.core.readBytes",
+            "kotlinx.io.core.writeFully",
+            "kotlinx.io.core.readText",
+            "kotlinx.io.core.writeText",
+            "kotlinx.io.streams.writePacket"
         )
     }
 }
