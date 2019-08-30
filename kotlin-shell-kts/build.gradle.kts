@@ -104,7 +104,7 @@ publishing(
     publicationConfig(
         project,
         bintrayPublication,
-        listOf(tasks.jar.get(), sourcesJar, dokkaJar)
+        listOf(tasks.jar.get(), sourcesJar, dokkaJar, tasks.shadowJar.get())
     )
 )
 
