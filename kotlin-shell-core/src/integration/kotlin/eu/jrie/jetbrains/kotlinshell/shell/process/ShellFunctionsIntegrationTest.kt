@@ -2,6 +2,7 @@ package eu.jrie.jetbrains.kotlinshell.shell.process
 
 import eu.jrie.jetbrains.kotlinshell.ProcessBaseIntegrationTest
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.InternalCoroutinesApi
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -9,6 +10,7 @@ import java.io.File
 import java.io.PrintStream
 
 // TODO: rewrite after implementing terminated processes management
+@InternalCoroutinesApi
 @ExperimentalCoroutinesApi
 class ShellFunctionsIntegrationTest : ProcessBaseIntegrationTest() {
 

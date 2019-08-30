@@ -3,12 +3,14 @@ package eu.jrie.jetbrains.kotlinshell.shell
 import eu.jrie.jetbrains.kotlinshell.ProcessBaseIntegrationTest
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.InternalCoroutinesApi
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
+@InternalCoroutinesApi
 @ExperimentalCoroutinesApi
 class ShellIntegrationTest : ProcessBaseIntegrationTest() {
     @Test

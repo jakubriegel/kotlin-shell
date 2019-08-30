@@ -5,6 +5,7 @@ import eu.jrie.jetbrains.kotlinshell.processes.pipeline.Pipeline
 import eu.jrie.jetbrains.kotlinshell.processes.pipeline.PipelineContextLambda
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.io.core.BytePacketBuilder
 import kotlinx.io.core.ByteReadPacket
 import kotlinx.io.streams.inputStream
@@ -19,6 +20,7 @@ interface ShellPipingFromByteReadPacket : ShellPipingFromStream {
      *
      * @return this [Pipeline]
      */
+    @InternalCoroutinesApi
     suspend infix fun ByteReadPacket.pipe(process: ProcessExecutable) = fromUse(this.inputStream()) pipe process
 
     /**

@@ -5,6 +5,7 @@ import eu.jrie.jetbrains.kotlinshell.processes.pipeline.Pipeline
 import eu.jrie.jetbrains.kotlinshell.processes.pipeline.PipelineContextLambda
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.io.core.BytePacketBuilder
 import java.io.File
 import java.io.OutputStream
@@ -17,6 +18,7 @@ interface ShellPipingFromFile : ShellPipingFromStream {
      *
      * @return this [Pipeline]
      */
+    @InternalCoroutinesApi
     suspend infix fun File.pipe(process: ProcessExecutable) = fromUse(this.inputStream()) pipe process
 
     /**

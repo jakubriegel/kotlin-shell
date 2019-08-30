@@ -4,6 +4,7 @@ import eu.jrie.jetbrains.kotlinshell.processes.execution.ProcessExecutable
 import eu.jrie.jetbrains.kotlinshell.processes.pipeline.Pipeline
 import eu.jrie.jetbrains.kotlinshell.processes.pipeline.PipelineContextLambda
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.InternalCoroutinesApi
 
 @ExperimentalCoroutinesApi
 interface ShellPipingThrough : ShellPipingTo {
@@ -13,6 +14,7 @@ interface ShellPipingThrough : ShellPipingTo {
      *
      * @return this [Pipeline]
      */
+    @InternalCoroutinesApi
     @ExperimentalCoroutinesApi
     suspend infix fun Pipeline.pipe(process: ProcessExecutable) = throughProcess(process)
 

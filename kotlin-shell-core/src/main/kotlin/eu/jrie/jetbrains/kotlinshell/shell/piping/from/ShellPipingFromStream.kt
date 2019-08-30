@@ -6,6 +6,7 @@ import eu.jrie.jetbrains.kotlinshell.processes.pipeline.PipelineContextLambda
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
 import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.PIPELINE_RW_PACKET_SIZE
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.io.core.BytePacketBuilder
 import kotlinx.io.streams.readPacketAtMost
 import java.io.EOFException
@@ -51,6 +52,7 @@ interface ShellPipingFromStream : ShellPipingFromLambda {
      *
      * @return this [Pipeline]
      */
+    @InternalCoroutinesApi
     suspend infix fun InputStream.pipe(process: ProcessExecutable) = from(this) pipe process
 
     /**

@@ -4,6 +4,7 @@ import eu.jrie.jetbrains.kotlinshell.processes.pipeline.PipelineContextLambda
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessChannel
 import eu.jrie.jetbrains.kotlinshell.shell.piping.PipingBaseIntegrationTest
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.io.core.BytePacketBuilder
 import kotlinx.io.core.buildPacket
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.io.OutputStream
 
+@InternalCoroutinesApi
 @ExperimentalCoroutinesApi
 class PipingFromLambdaIntegrationTest : PipingBaseIntegrationTest() {
 

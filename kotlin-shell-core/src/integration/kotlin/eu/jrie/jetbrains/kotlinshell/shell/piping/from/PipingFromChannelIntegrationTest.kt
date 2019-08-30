@@ -3,6 +3,7 @@ package eu.jrie.jetbrains.kotlinshell.shell.piping.from
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessChannel
 import eu.jrie.jetbrains.kotlinshell.shell.piping.PipingBaseIntegrationTest
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.core.BytePacketBuilder
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.OutputStream
 
+@InternalCoroutinesApi
 @ExperimentalCoroutinesApi
 class PipingFromChannelIntegrationTest : PipingBaseIntegrationTest() {
 

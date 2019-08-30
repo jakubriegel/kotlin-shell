@@ -8,6 +8,7 @@ import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
 import eu.jrie.jetbrains.kotlinshell.shell.ShellBase
 import eu.jrie.jetbrains.kotlinshell.shell.piping.ShellPipingThrough
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.io.core.BytePacketBuilder
 import java.io.File
 import java.io.OutputStream
@@ -20,6 +21,7 @@ interface ShellPipingFromProcess : ShellPipingThrough {
      *
      * @return this [Pipeline]
      */
+    @InternalCoroutinesApi
     suspend fun from(process: ProcessExecutable) = Pipeline.fromProcess(
         process, this, env(ShellBase.PIPELINE_CHANNEL_BUFFER_SIZE).toInt()
     )
@@ -30,6 +32,7 @@ interface ShellPipingFromProcess : ShellPipingThrough {
      *
      * @return this [Pipeline]
      */
+    @InternalCoroutinesApi
     @ExperimentalCoroutinesApi
     suspend infix fun ProcessExecutable.pipe(process: ProcessExecutable) = from(this) pipe process
 
@@ -39,6 +42,7 @@ interface ShellPipingFromProcess : ShellPipingThrough {
      *
      * @return this [Pipeline]
      */
+    @InternalCoroutinesApi
     @ExperimentalCoroutinesApi
     suspend infix fun ProcessExecutable.pipe(lambda: PipelineContextLambda) = from(this) pipe lambda
 
@@ -48,6 +52,7 @@ interface ShellPipingFromProcess : ShellPipingThrough {
      *
      * @return this [Pipeline]
      */
+    @InternalCoroutinesApi
     @ExperimentalCoroutinesApi
     suspend infix fun ProcessExecutable.pipe(channel: ProcessSendChannel) = from(this) pipe channel
 
@@ -57,6 +62,7 @@ interface ShellPipingFromProcess : ShellPipingThrough {
      *
      * @return this [Pipeline]
      */
+    @InternalCoroutinesApi
     @ExperimentalCoroutinesApi
     suspend infix fun ProcessExecutable.pipe(packetBuilder: BytePacketBuilder) = from(this) pipe packetBuilder
 
@@ -66,6 +72,7 @@ interface ShellPipingFromProcess : ShellPipingThrough {
      *
      * @return this [Pipeline]
      */
+    @InternalCoroutinesApi
     @ExperimentalCoroutinesApi
     suspend infix fun ProcessExecutable.pipe(stream: OutputStream) = from(this) pipe stream
 
@@ -75,6 +82,7 @@ interface ShellPipingFromProcess : ShellPipingThrough {
      *
      * @return this [Pipeline]
      */
+    @InternalCoroutinesApi
     @ExperimentalCoroutinesApi
     suspend infix fun ProcessExecutable.pipe(file: File) = from(this) pipe file
 
@@ -84,6 +92,7 @@ interface ShellPipingFromProcess : ShellPipingThrough {
      *
      * @return this [Pipeline]
      */
+    @InternalCoroutinesApi
     suspend infix fun ProcessExecutable.pipeAppend(file: File) = from(this) pipeAppend  file
 
     /**
@@ -92,6 +101,7 @@ interface ShellPipingFromProcess : ShellPipingThrough {
      *
      * @return this [Pipeline]
      */
+    @InternalCoroutinesApi
     @ExperimentalCoroutinesApi
     suspend infix fun ProcessExecutable.pipe(stringBuilder: StringBuilder) = from(this) pipe stringBuilder
 }

@@ -171,8 +171,9 @@ open class Shell protected constructor (
         }
 
     override suspend fun joinDetached() {
-        detachedProcessesJobs.forEach { it.second.join() }
-        detachedPipelinesJobs.forEach { it.second.join() }
+        logger.debug("joining all detached jobs")
+        detachedProcessesJobs.forEach { it.third.join() }
+        detachedPipelinesJobs.forEach { it.third.join() }
     }
 
     /**
@@ -210,6 +211,7 @@ open class Shell protected constructor (
     }
 
     override suspend fun finalize() {
+        logger.debug("finalizing shell")
         finalizeDetached()
         stdout.close()
         stdoutJob.join()

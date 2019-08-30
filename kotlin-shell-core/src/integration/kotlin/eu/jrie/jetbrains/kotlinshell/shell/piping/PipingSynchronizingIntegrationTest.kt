@@ -2,11 +2,13 @@ package eu.jrie.jetbrains.kotlinshell.shell.piping
 
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.delay
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Test
 
+@InternalCoroutinesApi
 @ExperimentalCoroutinesApi
 class PipingSynchronizingIntegrationTest : PipingBaseIntegrationTest() {
 
@@ -64,7 +66,7 @@ class PipingSynchronizingIntegrationTest : PipingBaseIntegrationTest() {
             delay(5)
             pipeline.processes.forEach { statesAfterDetach.add(it.pcb.state.name) }
 
-            pipeline.join()
+            fg(pipeline)
             pipeline.processes.forEach { statesAfterAwait.add(it.pcb.state.name) }
         }
 

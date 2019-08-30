@@ -2,6 +2,7 @@ package eu.jrie.jetbrains.kotlinshell.shell.piping
 
 import eu.jrie.jetbrains.kotlinshell.processes.pipeline.PipelineContextLambda
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.io.core.buildPacket
 import kotlinx.io.core.writeText
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.Test
 import java.io.File
 import java.io.PrintStream
 
+@InternalCoroutinesApi
 @ExperimentalCoroutinesApi
 class PipingForkIntegrationTest : PipingBaseIntegrationTest() {
 

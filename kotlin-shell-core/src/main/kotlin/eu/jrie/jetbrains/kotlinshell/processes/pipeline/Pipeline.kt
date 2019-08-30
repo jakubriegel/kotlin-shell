@@ -12,6 +12,7 @@ import eu.jrie.jetbrains.kotlinshell.shell.ShellBase
 import eu.jrie.jetbrains.kotlinshell.shell.piping.ShellPiping
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
@@ -50,7 +51,14 @@ class Pipeline @TestOnly internal constructor (
     var closed = false
         private set
 
-    private val processLine = mutableListOf<Process>()
+    var active = true
+        private set
+
+    private var nextIndex = 0
+
+    private val processLine = mutableListOf<Pair<Int, ProcessExecutable>> ()
+
+    private val lambdaLine = mutableListOf<Pair<Int, Job>>()
 
     private lateinit var lastOut: ProcessReceiveChannel
 
@@ -61,7 +69,7 @@ class Pipeline @TestOnly internal constructor (
      * Most recent [Process] is at the end of the list
      */
     val processes: List<Process>
-        get() = processLine.toList()
+        get() = processLine.map { it.second.process }
 
     /**
      * Adds [process] to this [Pipeline]
@@ -69,10 +77,12 @@ class Pipeline @TestOnly internal constructor (
      * @see ShellPiping
      * @return this [Pipeline]
      */
+    @InternalCoroutinesApi
     suspend fun throughProcess(process: ProcessExecutable) = apply {
         addProcess(process.updateContext(newIn = lastOut))
     }
 
+    @InternalCoroutinesApi
     private suspend fun addProcess(executable: ProcessExecutable) = ifNotEnded {
         executable.updateContext(newOut = channel())
             .apply {
@@ -80,12 +90,15 @@ class Pipeline @TestOnly internal constructor (
                 exec()
             }
 
-        launch {
+        val job = launch {
             executable.join()
+        }
+        job.invokeOnCompletion(onCancelling = true, invokeImmediately = true) {
+            logger.debug("onCompletion $job")
             executable.context.stdout.close()
         }
 
-        processLine.add(executable.process)
+        processLine.add(nextIndex++ to executable)// to job)
     }
 
     /**
@@ -107,10 +120,11 @@ class Pipeline @TestOnly internal constructor (
         lambdaContext
             .let { if (!end) it.updated(newOut = channel()) else it }
             .let { ctx ->
-                launch {
+                val job = launch {
                     lambda(ctx)
                     if (closeOut) ctx.stdout.close()
                 }
+                lambdaLine.add(nextIndex++ to job)
             }
     }
 
@@ -173,11 +187,99 @@ class Pipeline @TestOnly internal constructor (
      * @return this [Pipeline]
      */
     suspend fun join() = apply {
-        logger.debug("awaiting pipeline $this")
-        processLine.forEach { shell.commander.awaitProcess(it) }
-        asyncJobs.forEach { it.join() }
-        logger.debug("awaited pipeline $this")
+        if (active) {
+            active = false
+            logger.debug("joining pipeline $this")
+
+//        var n = nextIndex
+//        while (n > 0) {
+
+            val maxLambda = lambdaLine.apply { remove(maxBy { it.first }) }
+                .maxBy { it.first }
+            val maxProcess = processLine.maxBy { it.first }
+
+            if (maxLambda != null || maxProcess != null) {
+                if (maxLambda?.first ?: -1 > maxProcess?.first ?: -1) {
+                    maxLambda!!.second.join()
+                } else {
+                    maxProcess!!.second.join()
+                    maxProcess!!.second.context.stdout.close()
+                }
+            }
+
+            logger.debug("joined last job of $this")
+
+            processLine.forEach {
+                it.second.process.let { p ->
+                    if (p.isAlive()) { shell.commander.killProcess(p) }
+                    shell.commander.awaitProcess(p)
+                }
+
+            }
+            lambdaLine.forEach {
+                it.second.cancelAndJoin()
+            }
+
+//            n--
+//        }
+
+            asyncJobs.forEach { it.join() }
+//        asyncJobs.forEach { it.join() }
+            logger.debug("joined pipeline $this")
+        }
     }
+//        asyncJobs.forEach { it.join() }
+//        while (processLine.size > 0) {
+//            processLine
+//                .let { processes ->
+//                    while (!processes.all { !it.process.isAlive() }) {
+//                        logger.debug("in")
+//                        for (i in 0 until processes.size) {
+//                            if (processes[i].process.isAlive()) {
+//                                if (i + 1 < processes.size) {
+//                                    if (!processes[i + 1].process.isAlive()) {
+//                                        shell.commander.killProcess(processes[i].process)
+//                                    }
+//                                }
+//                            }
+//                            shell.commander.awaitProcess(processes[i].process)
+////                                else {
+////                                    shell.commander.awaitProcess(processes[i].process)
+////                                }
+////                            }
+////                            else {
+////                                shell.commander.awaitProcess(processes[i].process)
+////                            }
+//                            processes[i].context.stdout.close()
+//                        }
+
+//                        val i = processes.iterator()
+//                        while (processes.size > 0) {
+//                            while (i.hasNext()) {
+//                                i.next().let {
+//                                    if (it.isAlive()) {
+//                                        val x = it.next()
+//                                        if (!x.isAlive()) {
+//
+//                                        }
+//                                    }
+//                                    else shell.commander.awaitProcess(it)
+//                                }
+//                            }
+//                        }
+//                        processes.forEach {
+//                            if (it.first.isAlive()) if ()
+//                        }
+//                    }
+//                }
+
+
+
+//                if (!it.isAlive())
+//                shell.commander.awaitProcess(it)
+//            }
+//        }
+
 
     /**
      * Kills all processes in this [Pipeline]
@@ -187,7 +289,7 @@ class Pipeline @TestOnly internal constructor (
      */
     suspend fun kill() = apply {
         logger.debug("killing pipeline $this")
-        processLine.forEach { shell.commander.killProcess(it) }
+        processLine.forEach { shell.commander.killProcess(it.second.process) }
         asyncJobs.forEach { it.cancelAndJoin() }
         logger.debug("killed pipeline $this")
     }
@@ -197,9 +299,8 @@ class Pipeline @TestOnly internal constructor (
      */
     private fun channel(): ProcessSendChannel = Channel<ProcessChannelUnit>(channelBufferSize).also { lastOut = it }
 
-    private fun launch(block: suspend CoroutineScope.() -> Unit) {
-        asyncJobs.add(shell.scope.launch(block = block))
-    }
+    private fun launch(block: suspend CoroutineScope.() -> Unit) = shell.scope.launch(block = block)
+        .also { asyncJobs.add(it) }
 
     private suspend fun ifNotEnded(block: suspend () -> Unit) {
         if (closed) throw Exception("Pipeline closed")
@@ -214,6 +315,7 @@ class Pipeline @TestOnly internal constructor (
          *
          * @see ShellPiping
          */
+        @InternalCoroutinesApi
         internal suspend fun fromProcess(
             process: ProcessExecutable, shell: ShellBase, channelBufferSize: Int
         ) = Pipeline(shell, channelBufferSize)

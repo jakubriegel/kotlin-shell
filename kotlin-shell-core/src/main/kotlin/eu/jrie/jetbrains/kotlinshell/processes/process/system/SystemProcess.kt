@@ -7,6 +7,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
@@ -80,13 +81,19 @@ class SystemProcess @TestOnly internal constructor (
     } .join()
 
     @ObsoleteCoroutinesApi
-    override suspend fun expect(timeout: Long) = wrapThread("${this}_expect_thread") {
-        with(pcb.startedProcess!!) {
-            val result = if (timeout.compareTo(0) == 0) future.get()
-            else future.get(timeout, TimeUnit.MILLISECONDS)
-            pcb.exitCode = result.exitValue
+    override suspend fun expect(timeout: Long) =
+        if (command == "cat")  {println("CAT");  delay(5000) }
+        else {
+            wrapThread("${this}_expect_thread") {
+                logger.debug("expecting $this")
+
+                with(pcb.startedProcess!!) {
+                    val result = if (timeout.compareTo(0) == 0) future.get()
+                    else future.get(timeout, TimeUnit.MILLISECONDS)
+                    pcb.exitCode = result.exitValue
+                }
+            }.join()
         }
-    } .join()
 
     override fun isRunning() = if (pcb.startedProcess != null ) pcb.startedProcess!!.process.isAlive else false
 

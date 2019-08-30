@@ -5,12 +5,14 @@ import eu.jrie.jetbrains.kotlinshell.processes.process.Process
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessState
 import eu.jrie.jetbrains.kotlinshell.shell.ExecutionMode
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.delay
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertIterableEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
+@InternalCoroutinesApi
 @ExperimentalCoroutinesApi
 class SystemProcessIntegrationTest : ProcessBaseIntegrationTest() {
 

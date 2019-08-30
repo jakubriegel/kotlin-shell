@@ -2,9 +2,11 @@ package eu.jrie.jetbrains.kotlinshell.shell.piping
 
 import eu.jrie.jetbrains.kotlinshell.processes.pipeline.PipelineContextLambda
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.channels.consumeEach
 import org.junit.jupiter.api.Test
 
+@InternalCoroutinesApi
 @ExperimentalCoroutinesApi
 class PipingThroughIntegrationTest : PipingBaseIntegrationTest() {
     @Test

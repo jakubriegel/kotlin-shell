@@ -3,6 +3,7 @@ package eu.jrie.jetbrains.kotlinshell.processes.process
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -54,10 +55,18 @@ protected constructor (
 
     abstract fun isRunning(): Boolean
 
+    lateinit var awaitJob: Job
+
     internal suspend fun await(timeout: Long) {
         if (isAlive()) {
-            expect(timeout)
-            finalize()
+            if (!::awaitJob.isInitialized) {
+                awaitJob = scope.launch {
+                    expect(timeout)
+                    finalize()
+                }
+            }
+            awaitJob.join()
+
         }
     }
 

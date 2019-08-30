@@ -2,8 +2,11 @@ package eu.jrie.jetbrains.kotlinshell.processes
 
 import eu.jrie.jetbrains.kotlinshell.processes.process.Process
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessBuilder
+import eu.jrie.jetbrains.kotlinshell.processes.process.system.SystemProcess
+import eu.jrie.jetbrains.kotlinshell.processes.process.system.SystemProcessBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
 import org.slf4j.LoggerFactory
 
 @ExperimentalCoroutinesApi
@@ -27,10 +30,10 @@ class ProcessCommander internal constructor (
     }
 
     internal suspend fun awaitProcess(process: Process, timeout: Long = 0) {
-        logger.debug("awaiting process ${process.name}")
+        logger.debug("awaiting process $process")
         if (!processes.contains(process)) throw Exception("unknown process")
         process.await(timeout)
-        logger.debug("awaited process ${process.name}")
+        logger.debug("awaited process $process")
     }
 
     internal suspend fun awaitAll() {
@@ -41,7 +44,18 @@ class ProcessCommander internal constructor (
 
     internal suspend fun killProcess(process: Process) {
         if (!processes.contains(process)) throw Exception("unknown process")
-        process.kill()
+//        try {
+//            process.kill()
+//        } catch (e: Exception) {
+                val p = createProcess(
+                    SystemProcessBuilder("kill", listOf("${(process as SystemProcess).pcb.systemPID}"), 1)
+                        .withStdin(Channel())
+                        .withStderr(Channel())
+                        .withStdout(Channel())
+                )
+                startProcess(p)
+                awaitProcess(p)
+//        }
     }
 
     internal suspend fun killAll() {

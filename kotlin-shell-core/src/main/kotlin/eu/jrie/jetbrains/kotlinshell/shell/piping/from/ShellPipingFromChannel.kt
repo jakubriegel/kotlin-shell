@@ -8,6 +8,7 @@ import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
 import eu.jrie.jetbrains.kotlinshell.shell.ShellBase.Companion.PIPELINE_CHANNEL_BUFFER_SIZE
 import eu.jrie.jetbrains.kotlinshell.shell.piping.ShellPipingThrough
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.io.core.BytePacketBuilder
 import java.io.File
 import java.io.OutputStream
@@ -30,6 +31,7 @@ interface ShellPipingFromChannel : ShellPipingThrough {
      *
      * @return this [Pipeline]
      */
+    @InternalCoroutinesApi
     suspend infix fun ProcessReceiveChannel.pipe(process: ProcessExecutable) = from(this) pipe process
 
     /**

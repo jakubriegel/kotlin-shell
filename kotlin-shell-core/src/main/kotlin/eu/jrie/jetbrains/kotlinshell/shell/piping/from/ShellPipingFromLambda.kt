@@ -7,6 +7,7 @@ import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessSendChannel
 import eu.jrie.jetbrains.kotlinshell.shell.ShellBase
 import eu.jrie.jetbrains.kotlinshell.shell.piping.ShellPipingThrough
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.io.core.BytePacketBuilder
 import java.io.File
 import java.io.OutputStream
@@ -29,6 +30,7 @@ interface ShellPipingFromLambda : ShellPipingThrough {
      *
      * @return this [Pipeline]
      */
+    @InternalCoroutinesApi
     suspend infix fun PipelineContextLambda.pipe(process: ProcessExecutable) = from(this) pipe process
 
     /**

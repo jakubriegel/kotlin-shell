@@ -3,11 +3,13 @@ package eu.jrie.jetbrains.kotlinshell.shell.piping
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessChannel
 import eu.jrie.jetbrains.kotlinshell.processes.process.ProcessChannelUnit
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.io.PrintStream
 
+@InternalCoroutinesApi
 @ExperimentalCoroutinesApi
 class PipingIntegrationTest : PipingBaseIntegrationTest() {
 
