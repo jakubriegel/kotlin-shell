@@ -1,21 +1,46 @@
 # Kotlin Shell
 
 ## about
-Kotlin Shell is a prototype tool for performing shell programming in Kotlin and KotlinScript.
-It provides shell-like API which takes advantage of Kotlin high level possibilities.
+Kotlin Shell is a prototype tool for performing shell programming in Kotlin and Kotlin script.
+It provides shell-like API which takes advantage of Kotlin features.
 
 For examples go to the [examples](#examples) section.
 
+## intro
+Creating processes is extremly easy in Kotlin Shell:
+```kotlin
+shell {
+  "echo hello world"()
+}
+
+// echo hello world
+```
+
+Piping is also supported:
+```kotlin
+shell {
+  val toUpper = stringLambda { it.toUpper() to "" }
+  pipeline { file("data.txt") pipe "grep abc".process() pipe toUpper }
+}
+
+// cat data.txt | grep abc | tr '[:lower:]' '[:upper:]'
+```
+
 ## content
 * [about](#about)
+* [intro](#intro)
 * [content](#content)
-* [get and run](#get-and-run)
-  + [library](#library)
-  + [scripting](#scripting)
+* [preliminary](#preliminary)
+* [how to get Kotlin Shell](#how-to-get-kotlin-shell)
+  + [for scripting](#for-scripting)
+  + [as library](#as-library)
+* [how to run the scripts](#how-to-run-the-scripts)
+  + [in Kotlin script](#in-kotlin-script)
     - [kshell command](#kshell-command)
       * [command line](#command-line)
       * [shebang](#shebang)
     - [kotlinc command](#kotlinc-command)
+  + [in Kotlin programs](#in-kotlin-programs)
 * [usage](#usage)
   + [writing scripts](#writing-scripts)
     - [in Kotlin code](#in-kotlin-code)
@@ -28,8 +53,8 @@ For examples go to the [examples](#examples) section.
       * [kts process](#kts-process)
     - [multiple calls to processes](#multiple-calls-to-processes)
   + [pipelines](#pipelines)
-    - [piping logic](#piping-logic)
-      * [introduction](#introduction)
+    - [piping overview](#piping-overview)
+      * [piping introduction](#piping-introduction)
       * [piping grammar](#piping-grammar)
     - [creating pipeline](#creating-pipeline)
     - [forking stderr](#forking-stderr)
@@ -37,10 +62,11 @@ For examples go to the [examples](#examples) section.
     - [lambdas suitable for piping](#lambdas-suitable-for-piping)
       * [example](#example)
   + [detaching](#detaching)
+    - [detaching overview](#detaching-overview)
     - [detaching process](#detaching-process)
     - [detaching pipeline](#detaching-pipeline)
     - [attaching](#attaching)
-  + [demonizing](#demonizing)
+  + [daemonizing](#daemonizing)
   + [environment](#environment)
     - [system environment](#system-environment)
     - [shell environment](#shell-environment)
@@ -53,14 +79,30 @@ For examples go to the [examples](#examples) section.
     - [custom shell methods](#custom-shell-methods)
     - [special properties](#special-properties)
   + [sub shells](#sub-shells)
-  + [dependencies](#dependencies)
-    - [external dependencies](#external-dependencies)
-    - [internal dependencies](#internal-dependencies)
+    - [creating sub shells](#creating-sub-shells)
+    - [sub shells use cases](#sub-shells-use-cases)
+  + [scripting specific features](#scripting-specific-features)
+    - [dependencies](#dependencies)
+      * [external dependencies](#external-dependencies)
+      * [internal dependencies](#internal-dependencies)
 * [examples](#examples)
-## get and run
-### library
+
+## preliminary
+The library is designed primary for Unix-like operating systems and was tested fully on MacOS.
+Windows support is not planned at the moment.
+
+## how to get Kotlin Shell
+### for scripting
+[![scripting](https://api.bintray.com/packages/jakubriegel/kotlin-shell/kotlin-shell-kts/images/download.svg) ](https://bintray.com/jakubriegel//kotlin-shell/kotlin-shell-kts/_latestVersion)
+
+Use `kshell` command for running scripts from command line. To read more about it and download the command go [here](https://github.com/jakubriegel/kshell).
+
+You can also [download](https://bintray.com/jakubriegel//kotlin-shell/kotlin-shell-kts/_latestVersion) binaries of `kotlin-shell-kts` to use the script definition in custom way.
+
+### as library
 [![library](https://api.bintray.com/packages/jakubriegel/kotlin-shell/kotlin-shell-core/images/download.svg) ](https://bintray.com/jakubriegel//kotlin-shell/kotlin-shell-core/_latestVersion)
 
+Gradle:
 ```kotlin
 repositories {
     maven("https://dl.bintray.com/jakubriegel/kotlin-shell")
@@ -75,9 +117,11 @@ Kotlin Shell features slf4j logging. To use it add logging implementation or NOP
 ```kotlin
 implementation("org.slf4j:slf4j-nop:1.7.26")
 ```
-### scripting
-[![scripting](https://api.bintray.com/packages/jakubriegel/kotlin-shell/kotlin-shell-kts/images/download.svg) ](https://bintray.com/jakubriegel//kotlin-shell/kotlin-shell-kts/_latestVersion)
 
+You can also [download](https://bintray.com/jakubriegel//kotlin-shell/kotlin-shell-core/_latestVersion) binaries of `kotlin-shell-core` to use the library in any other project.
+
+## how to run the scripts
+### in Kotlin script
 Kotlin Shell scripts have `sh.kts` extension.
 
 Some environment variables may be set to customize script execution. Go to the [environment](#environment) section to learn more.
@@ -107,18 +151,20 @@ example:
 ```
 kotlinc -cp lib/kotlin-shell-kts-all.jar -Dkotlin.script.classpath  -script hello.sh.kts
 ```
-
-## usage
-### writing scripts 
-#### in Kotlin code
-with new coroutine scope:
+### in Kotlin programs
+Calling the `shell` block will provide access to Kotlin Shell API:
 ```kotlin
 shell {
-    "echo hello world!"()
+  // code
 }
 ```
 
-with given scope:
+## usage
+### writing scripts 
+Kotlin Shell is driven by [kotlinx.io](https://github.com/Kotlin/kotlinx-io) and [kotlinx.coroutines](https://github.com/Kotlin/kotlinx.coroutines). Therefore the API is fully non-blockign and most functions are suspending. To take advantage of that, you need to pass the script as `suspend fun` and `CoroutineScope` as parameters to the suspending `shell` block.
+
+#### in Kotlin code
+With given scope:
 ```kotlin
 shell (
     scope = myScope
@@ -126,6 +172,15 @@ shell (
     "echo hello world!"()
 }
 ```
+
+With new coroutine scope:
+```kotlin
+shell {
+    "echo hello world!"()
+}
+```
+
+
 #### in Kotlin Script
 ##### blocking api
 The blocking api features basic shell commands without the need of wrapping it into coroutines calls:
@@ -135,7 +190,7 @@ The blocking api features basic shell commands without the need of wrapping it i
 It can be accessed in Kotlin code as well by using `ScriptingShell` class.
 
 ##### non blocking api
-The `shell()` function gives access to full api of `kotlin-shell`:
+The `shell` block gives access to full api of `kotlin-shell`. It receives `GlobalScope` as implicit parameter:
 ```kotlin
 shell {
     "echo hello world!"()
@@ -185,8 +240,8 @@ To run equivalent process multiple times call `ProcessExecutable.copy()`
 ### pipelines
 Pipelines can operate on processes, lambdas, files, strings, byte packages and streams. 
 
-#### piping logic
-##### introduction
+#### piping overview
+##### piping introduction
 Every executable element in Kotlin Shell receives its own `ExecutionContext`, which consist of `stdin`, `stdout` and `stderr` implemented as `Channels`. In the library channels are used under aliases `ProcessChannel`, `ProcessSendChannel` and `ProcessReceiveChannel` their unit is always `ByteReadPacket`. `Shell` itself is an `ExecutionContext` and provides default channels:
 * `stdin` is always empty and closed `ProcessReceiveChannel`, which effectively acts like `/dev/null`. It  It can be accessed elsewhere by `nullin` member.
 * `stdout` is a rendezvous `ProcessSendChannel`, that passes everything to `System.out`.
@@ -304,6 +359,9 @@ shell {
 ```
 
 ### detaching
+#### detaching overview
+Detached process or pipeline is being executed asynchronous to the shell. It can be attached or awaited at any time. Also all of not-ended detached jobs will be awaited after the end of the script before finishig `shell` block.
+
 #### detaching process
 To detach process use `detach()` function:
 ```kotlin
@@ -350,18 +408,18 @@ To access detached processes use `detachedPipelines` member. It stores list of p
 #### attaching
 To attach detached job (process or pipeline) use `fg()`:
 * `fg(Int)` accepting detached job id. By default it will use `1` as id.
-* `fg(Process)`  accepting detached process
-* `fg(Pipeline)`  accepting detached pipeline
+* `fg(Process)` accepting detached process
+* `fg(Pipeline)` accepting detached pipeline
 
 To join all detached jobs call `joinDetached()`
 
-### demonizing
+### daemonizing
 > At the current stage demonizing processes and pipelines is implemented in very unstable and experimental way. 
 > 
 > Though it should not be used. 
 
 ### environment
-Environment in Kotlin Shell is divided into two parts `shell environment` and `shell variables`. The environment from system is also inherited
+Environment in Kotlin Shell is divided into two parts `shell environment` and `shell variables`. The environment from system is also copied.
 
 To access the environment call:
 * `environment` list or `env` command for `shell environment`
@@ -373,7 +431,7 @@ To access the environment call:
 `system environment` is copied to `shell environment` at its creation. To access system environment any time call `systemEnv`
 
 #### shell environment
-`shell environment` is inherited by `Shell` from the system. It can be modified and is copied to sub shells.
+`shell environment` is copied to `Shell` from the system. It can be modified and is copied to sub shells.
 
 To set environment use `export`:
 ```kotlin
@@ -499,6 +557,7 @@ where `T` is desired return type or `Unit`. Such functions can be declared outsi
 * `variables`
 
 ### sub shells
+#### creating sub shells
 To create sub shell use `shell` block:
 ```koltin
 shell {
@@ -524,12 +583,41 @@ shell {
 
 Sub shells suspend execution of the parent shell.
 
-### dependencies
-Kotlin Shell scripts support adding dependencies
+#### sub shells use cases 
+Sub shell can be used to provide custom environment for commands:
+```kotlin
+shell {
+  export("KEY" to "ONE")
+  shell (
+    vars = mapOf("KEY" to "TWO")
+  ) {
+    "echo ${env("KEY")} // TWO
+  }
+  
+  // rest of the script
+}
+```
 
-Kotlin Shell uses dependencies mechanism from `kotlin-main-kts`.
+Or to temporarly change the directory:
+```kotlin
+shell {
+  "echo ${env("PWD")} // ../dir
 
-#### external dependencies
+  shell (
+    dir = file("bin")
+  ) {
+    "echo ${env("PWD")} // ../dir/bin
+  }
+  
+  // rest of the script
+}
+```
+
+### scripting specific features
+#### dependencies
+Kotlin Shell scripts support external and internal dependencies. The mechanism from `kotlin-main-kts` is being used. Learn more about it in [KEEP](https://github.com/Kotlin/KEEP/blob/master/proposals/scripting-support.md) and [blog post](https://blog.jetbrains.com/kotlin/2018/09/kotlin-1-3-rc-is-here-migrate-your-coroutines/#scripting).
+
+##### external dependencies
 External dependencies from maven repositories can be added via `@file:Repository` `@file:DependsOn` annotation: 
 ```kotlin
 @file:Repository("MAVEN_REPOSITORY_URL")
@@ -537,7 +625,7 @@ External dependencies from maven repositories can be added via `@file:Repository
 ```
 then they can be imported with standard `import` statement.
 
-#### internal dependencies
+##### internal dependencies
 To import something from local file use `@file:Import`:
 ```kotlin
 @file:Import("SCRIPT.sh.kts")
