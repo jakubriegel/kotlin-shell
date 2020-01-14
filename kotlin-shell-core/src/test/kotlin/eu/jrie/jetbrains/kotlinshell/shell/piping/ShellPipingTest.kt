@@ -79,7 +79,7 @@ class ShellPipingTest {
     fun `should create StreamLambda`() {
         // expect no error
         shell.streamLambda { stdin, stdout, stderr ->
-            stdin.use { it.readAllBytes() }
+            stdin.use { it.readBytes() }
             stdout.writePacket(abc)
             stderr.writePacket(def)
         }

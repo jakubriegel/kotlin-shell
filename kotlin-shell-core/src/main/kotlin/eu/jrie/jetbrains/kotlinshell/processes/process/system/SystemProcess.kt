@@ -74,8 +74,9 @@ class SystemProcess @TestOnly internal constructor (
     @ObsoleteCoroutinesApi
     override suspend fun execute() = wrapThread("${this}_execution_thread") {
         val started = executor.start()!!
-        pcb.startTime = started.process.info().startInstant().orElse(Instant.now())
-        pcb.systemPID = started.process.pid()
+        pcb.startTime = Instant.now()
+            // started.process.info().startInstant().orElse(Instant.now())
+        pcb.systemPID = Process::class.java.methods.find { it.name == "pid" }?.let { it.invoke(started.process) as? Long } ?: -1
         pcb.startedProcess = started
     } .join()
 
