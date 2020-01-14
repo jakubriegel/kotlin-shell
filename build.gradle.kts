@@ -3,7 +3,7 @@ import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.3.50-eap-86"
+    kotlin("jvm") version "1.3.61"
     `maven-publish`
     id("com.jfrog.bintray") version "1.8.4" apply false
     id("org.jetbrains.dokka") version "0.9.17"
