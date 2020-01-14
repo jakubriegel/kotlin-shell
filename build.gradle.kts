@@ -83,7 +83,7 @@ val uploadConfig by extra {
 
 allprojects {
     group = "eu.jrie.jetbrains"
-    version = "0.2"
+    version = "0.2.1"
 
     repositories {
         maven { setUrl("https://dl.bintray.com/kotlin/kotlin-eap") }
