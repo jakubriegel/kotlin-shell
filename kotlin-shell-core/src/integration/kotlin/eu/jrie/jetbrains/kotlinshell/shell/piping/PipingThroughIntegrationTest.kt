@@ -77,7 +77,7 @@ class PipingThroughIntegrationTest : PipingBaseIntegrationTest() {
             val lambda = streamLambda { inputStream, outputStream, _ ->
                 inputStream.use { input ->
                     outputStream.use { output ->
-                        output.write(input.readAllBytes())
+                        output.write(input.readBytes())
                     }
                 }
             }
