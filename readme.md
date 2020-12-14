@@ -222,7 +222,7 @@ or simply:
 
 To start process from file contents use `File.process()` extension:
 ```kotlin
-val process = scriptFile.process(agr1, agr2)
+val process = scriptFile.process(arg1, arg2)
 process()
 ```
 
