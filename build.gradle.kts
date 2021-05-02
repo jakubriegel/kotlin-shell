@@ -42,7 +42,7 @@ val publicationConfig by extra {
             repositories {
                 maven {
                     name = "GitHubPackages"
-                    url = uri("https://maven.pkg.github.com/jakubriegel/$publication")
+                    url = uri("https://maven.pkg.github.com/jakubriegel/kotlin-shell/$publication")
                     credentials {
                         username = System.getenv("GITHUB_ACTOR")
                         password = System.getenv("GITHUB_TOKEN")
