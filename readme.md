@@ -222,7 +222,7 @@ or simply:
 
 To start process from file contents use `File.process()` extension:
 ```kotlin
-val process = scriptFile.process(agr1, agr2)
+val process = scriptFile.process(arg1, arg2)
 process()
 ```
 
@@ -360,7 +360,7 @@ shell {
 
 ### detaching
 #### detaching overview
-Detached process or pipeline is being executed asynchronous to the shell. It can be attached or awaited at any time. Also all of not-ended detached jobs will be awaited after the end of the script before finishig `shell` block.
+Detached process or pipeline is being executed asynchronous to the shell. It can be attached or awaited at any time. Also all of not-ended detached jobs will be awaited after the end of the script before finishing `shell` block.
 
 #### detaching process
 To detach process use `detach()` function:

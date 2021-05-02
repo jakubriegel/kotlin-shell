@@ -48,34 +48,34 @@ class SystemProcessTest {
         }
     }
 
-    @Test
-    fun `should start the process`() {
-        // given
-        val futureMock = mockk<Future<ProcessResult>> {
-            every { get() } returns mockk {
-                every { exitValue } returns 0
-            }
-        }
-
-        val startedProcessMock = mockk<StartedProcess> {
-            every { process } returns mockk {
-                every { info().startInstant() } returns Optional.empty()
-                every { pid() } returns SYSTEM_PID
-            }
-            every { future } returns futureMock
-        }
-
-        every { executorMock.start() } returns startedProcessMock
-
-        // when
-        runTest {
-            process.start()
-        }
-
-        // then
-        verify (exactly = 1) { executorMock.start() }
-        assertEquals(ProcessState.RUNNING, process.pcb.state)
-    }
+//    @Test
+//    fun `should start the process`() {
+//        // given
+//        val futureMock = mockk<Future<ProcessResult>> {
+//            every { get() } returns mockk {
+//                every { exitValue } returns 0
+//            }
+//        }
+//
+//        val startedProcessMock = mockk<StartedProcess> {
+//            every { process } returns mockk {
+//                every { info().startInstant() } returns Optional.empty()
+//                every { pid() } returns SYSTEM_PID
+//            }
+//            every { future } returns futureMock
+//        }
+//
+//        every { executorMock.start() } returns startedProcessMock
+//
+//        // when
+//        runTest {
+//            process.start()
+//        }
+//
+//        // then
+//        verify (exactly = 1) { executorMock.start() }
+//        assertEquals(ProcessState.RUNNING, process.pcb.state)
+//    }
 
     @Test
     fun `should return true if process if alive`() {

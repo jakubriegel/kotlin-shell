@@ -55,7 +55,7 @@ val publicationConfig by extra {
 
 allprojects {
     group = "eu.jrie.jetbrains"
-    version = "0.2"
+    version = "0.2.1"
 
     repositories {
         mavenCentral()

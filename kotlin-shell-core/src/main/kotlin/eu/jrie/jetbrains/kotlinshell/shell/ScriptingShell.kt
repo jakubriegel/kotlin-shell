@@ -37,6 +37,13 @@ fun script(scope: CoroutineScope, script: ScriptingShell.() -> Unit) {
     ).script()
 }
 
+@ExperimentalCoroutinesApi
+fun shell(script: ShellScript) {
+    script {
+        shell(script)
+    }
+}
+
 /**
  * A class exposing basic non suspend API for shell scripting.
  *
