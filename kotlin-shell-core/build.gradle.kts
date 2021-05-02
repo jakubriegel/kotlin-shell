@@ -1,11 +1,9 @@
-import com.jfrog.bintray.gradle.BintrayExtension
 import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 
 plugins {
     kotlin("jvm")
     `maven-publish`
-    id("com.jfrog.bintray")
     id("org.jetbrains.dokka")
 }
 
@@ -68,21 +66,11 @@ artifacts {
     archives(tasks.jar)
 }
 
-val bintrayPublication = "kotlin-shell-core"
-
 val publicationConfig: (Project, String, List<Jar>) -> Action<PublishingExtension> by rootProject.extra
 publishing(
     publicationConfig(
         project,
-        bintrayPublication,
+        "kotlin-shell-core",
         listOf(tasks.jar.get(), sourcesJar, dokkaJar)
-    )
-)
-
-val uploadConfig: (String, String) -> Action<BintrayExtension> by rootProject.extra
-bintray(
-    uploadConfig(
-        bintrayPublication,
-        "Library for performing shell-like programing in Kotlin"
     )
 )

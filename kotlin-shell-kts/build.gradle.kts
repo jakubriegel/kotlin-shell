@@ -1,11 +1,9 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import com.jfrog.bintray.gradle.BintrayExtension
 import org.jetbrains.dokka.gradle.DokkaTask
 
 plugins {
     kotlin("jvm")
     `maven-publish`
-    id("com.jfrog.bintray")
     id("org.jetbrains.dokka")
     id("com.github.johnrengelman.shadow")
 }
@@ -97,23 +95,11 @@ artifacts {
     archives(tasks.jar)
 }
 
-val bintrayPublication = "kotlin-shell-kts"
-
 val publicationConfig: (Project, String, List<Jar>) -> Action<PublishingExtension> by rootProject.extra
 publishing(
     publicationConfig(
         project,
-        bintrayPublication,
+        "kotlin-shell-kts",
         listOf(tasks.jar.get(), sourcesJar, dokkaJar, tasks.shadowJar.get())
-    )
-)
-
-
-
-val uploadConfig: (String, String) -> Action<BintrayExtension> by rootProject.extra
-bintray(
-    uploadConfig(
-        bintrayPublication,
-        "Script definition for Kotlin shell scripting"
     )
 )
