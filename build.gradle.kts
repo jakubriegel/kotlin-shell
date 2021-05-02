@@ -4,19 +4,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "1.4.32"
     `maven-publish`
-    id("org.jetbrains.dokka") version "0.9.17"
+    id("org.jetbrains.dokka") version "1.4.32"
     id("com.github.johnrengelman.shadow") version "5.1.0" apply false
-}
-
-val dokkaConfig: DokkaTask.() -> Unit by extra {
-    {
-        outputFormat = "javadoc"
-        outputDirectory = "${project.buildDir}/javadoc"
-        noStdlibLink = true
-        jdkVersion = 8
-        reportUndocumented = false
-        sourceDirs = files("src/main/kotlin")
-    }
 }
 
 val dokkaJarConfig: (TaskProvider<DokkaTask>) ->  Jar.() -> Unit by extra {

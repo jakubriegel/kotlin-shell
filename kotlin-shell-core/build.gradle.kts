@@ -17,6 +17,8 @@ dependencies {
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0-RC2")
     api("org.jetbrains.kotlinx:kotlinx-io-jvm:0.1.11")
 
+    dokkaJavadocPlugin("org.jetbrains.dokka:kotlin-as-java-plugin:1.4.32")
+
     testImplementation(kotlin("reflect"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.5.0")
     testImplementation("io.mockk:mockk:1.9.3")
@@ -44,7 +46,7 @@ val integration by tasks.creating(Test::class) {
 }
 
 val dokkaJarConfig: (task: TaskProvider<DokkaTask>) ->  Jar.() -> Unit by rootProject.extra
-val dokkaJar by tasks.creating(Jar::class, dokkaJarConfig(tasks.dokka))
+val dokkaJar by tasks.creating(Jar::class, dokkaJarConfig(tasks.dokkaJavadoc))
 
 val sourcesJarConfig: Jar.() -> Unit by rootProject.extra
 val sourcesJar by tasks.creating(Jar::class, sourcesJarConfig)
@@ -53,11 +55,7 @@ tasks {
     withType<Test> {
         useJUnitPlatform()
     }
-
     check { dependsOn(integration) }
-
-    val dokkaConfig: DokkaTask.() -> Unit by rootProject.extra
-    dokka(dokkaConfig)
 }
 
 artifacts {

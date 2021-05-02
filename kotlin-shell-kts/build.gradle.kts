@@ -18,17 +18,13 @@ dependencies {
 }
 
 val dokkaJarConfig: (task: TaskProvider<DokkaTask>) ->  Jar.() -> Unit by rootProject.extra
-val dokkaJar by tasks.creating(Jar::class, dokkaJarConfig(tasks.dokka))
+val dokkaJar by tasks.creating(Jar::class, dokkaJarConfig(tasks.dokkaJavadoc))
 
 val sourcesJarConfig: Jar.() -> Unit by rootProject.extra
 val sourcesJar by tasks.creating(Jar::class, sourcesJarConfig)
 
 tasks {
     val jarBaseName = "kotlin-shell-kts"
-
-    val dokkaConfig: DokkaTask.() -> Unit by rootProject.extra
-    dokka(dokkaConfig)
-
     val relocatedPackagesRoot = "$group.relocated"
     val packagesToRelocate = listOf(
         "org.jetbrains.kotlin",
