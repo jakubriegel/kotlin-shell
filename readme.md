@@ -92,26 +92,33 @@ The library is designed primary for Unix-like operating systems and was tested f
 Windows support is not planned at the moment.
 
 ## how to get Kotlin Shell
-### for scripting
-[![scripting](https://api.bintray.com/packages/jakubriegel/kotlin-shell/kotlin-shell-kts/images/download.svg) ](https://bintray.com/jakubriegel//kotlin-shell/kotlin-shell-kts/_latestVersion)
 
+> Kotlin Shell is distributed via GitHub Packages.
+
+### for scripting
 Use `kshell` command for running scripts from command line. To read more about it and download the command go [here](https://github.com/jakubriegel/kshell).
 
-You can also [download](https://bintray.com/jakubriegel//kotlin-shell/kotlin-shell-kts/_latestVersion) binaries of `kotlin-shell-kts` to use the script definition in custom way.
+You can also [download](https://github.com/jakubriegel/kotlin-shell/packages) binaries of `kotlin-shell-kts` to use the script definition in custom way.
 
 ### as library
-[![library](https://api.bintray.com/packages/jakubriegel/kotlin-shell/kotlin-shell-core/images/download.svg) ](https://bintray.com/jakubriegel//kotlin-shell/kotlin-shell-core/_latestVersion)
-
 Gradle:
 ```kotlin
 repositories {
-    maven("https://dl.bintray.com/jakubriegel/kotlin-shell")
+  maven {
+    url = uri("https://maven.pkg.github.com/jakubriegel/kotlin-shell/kotlin-shell-core")
+    credentials {
+      username = System.getenv("GITHUB_ACTOR")
+      password = System.getenv("GITHUB_TOKEN")
+    }
+  }
 }
 
 dependencies {
-    implementation("eu.jrie.jetbrains:kotlin-shell-core:VERSION")
+    implementation("kotlin-shell-core.eu.jrie.jetbrains:kotlin-shell-core:VERSION")
 }
 ```
+
+For more information about using GitHub packages with Gradle go [here](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-gradle-registry#installing-a-package) or to packages section of thi repository.
 
 Kotlin Shell features slf4j logging. To use it add logging implementation or NOP logger to turn it off: 
 ```kotlin
