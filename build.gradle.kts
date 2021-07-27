@@ -71,8 +71,7 @@ val publicationConfig by extra {
                 }
                 maven {
                     name = "ossStaging"
-                    // Might be the new oss1 domain
-                    url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+                    url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
                     credentials {
                         username = System.getenv("SONATYPE_NEXUS_USERNAME")
                         password = System.getenv("SONATYPE_NEXUS_PASSWORD")
