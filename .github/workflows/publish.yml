@@ -6,6 +6,7 @@ on:
 
 jobs:
   publish-core:
+    environment: Publish
     runs-on: ubuntu-latest
     steps:
       - name: Checkout latest code
@@ -15,10 +16,9 @@ jobs:
         with:
           java-version: 8
       - name: Publish package
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew kotlin-shell-core:publish
   publish-kts:
+    environment: Publish
     runs-on: ubuntu-latest
     steps:
       - name: Checkout latest code
@@ -28,6 +28,4 @@ jobs:
         with:
           java-version: 8
       - name: Publish package
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew kotlin-shell-kts:publish

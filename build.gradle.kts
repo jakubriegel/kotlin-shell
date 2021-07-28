@@ -62,14 +62,6 @@ val publicationConfig by extra {
             }
             repositories {
                 maven {
-                    name = "GitHubPackages"
-                    url = uri("https://maven.pkg.github.com/jakubriegel/kotlin-shell/$publication")
-                    credentials {
-                        username = System.getenv("GITHUB_ACTOR")
-                        password = System.getenv("GITHUB_TOKEN")
-                    }
-                }
-                maven {
                     name = "ossStaging"
                     url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
                     credentials {
@@ -99,8 +91,6 @@ subprojects {
     apply(plugin = "signing")
     afterEvaluate {
         configure<SigningExtension> {
-            // GPG_PRIVATE_KEY should contain the armoured private key that starts with -----BEGIN PGP PRIVATE KEY BLOCK-----
-            // It can be obtained with gpg --armour --export-secret-keys KEY_ID
             useInMemoryPgpKeys(System.getenv("GPG_PRIVATE_KEY"), System.getenv("GPG_PRIVATE_KEY_PASSWORD"))
             val publicationsContainer = (extensions.getByName("publishing") as PublishingExtension).publications
             sign(publicationsContainer)
