@@ -16,6 +16,11 @@ jobs:
         with:
           java-version: 8
       - name: Publish package
+        env:
+          SONATYPE_NEXUS_USERNAME: ${{ secrets.SONATYPE_NEXUS_USERNAME }}
+          SONATYPE_NEXUS_PASSWORD: ${{ secrets.SONATYPE_NEXUS_PASSWORD }}
+          GPG_PRIVATE_KEY : ${{ secrets.GPG_PRIVATE_KEY  }}
+          GPG_PRIVATE_KEY_PASSWORD: ${{ secrets.GPG_PRIVATE_KEY_PASSWORD }}
         run: ./gradlew kotlin-shell-core:publish
   publish-kts:
     environment: Publish
@@ -28,4 +33,9 @@ jobs:
         with:
           java-version: 8
       - name: Publish package
+        env:
+            SONATYPE_NEXUS_USERNAME: ${{ secrets.SONATYPE_NEXUS_USERNAME }}
+            SONATYPE_NEXUS_PASSWORD: ${{ secrets.SONATYPE_NEXUS_PASSWORD }}
+            GPG_PRIVATE_KEY : ${{ secrets.GPG_PRIVATE_KEY  }}
+            GPG_PRIVATE_KEY_PASSWORD: ${{ secrets.GPG_PRIVATE_KEY_PASSWORD }}
         run: ./gradlew kotlin-shell-kts:publish
