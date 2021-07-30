@@ -96,25 +96,22 @@ Windows support is not planned at the moment.
 > Kotlin Shell is distributed via GitHub Packages.
 
 ### for scripting
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/eu.jrie.jetbrains/kotlin-shell-kts/badge.svg)](https://maven-badges.herokuapp.com/maven-central/eu.jrie.jetbrains/kotlin-shell-kts)
+
 Use `kshell` command for running scripts from command line. To read more about it and download the command go [here](https://github.com/jakubriegel/kshell).
 
 You can also [download](https://github.com/jakubriegel/kotlin-shell/packages) binaries of `kotlin-shell-kts` to use the script definition in custom way.
 
 ### as library
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/eu.jrie.jetbrains/kotlin-shell-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/eu.jrie.jetbrains/kotlin-shell-core)
+
+
 Gradle:
 ```kotlin
 repositories {
-  maven {
-    url = uri("https://maven.pkg.github.com/jakubriegel/kotlin-shell/kotlin-shell-core")
-    credentials {
-      username = System.getenv("GITHUB_ACTOR")
-      password = System.getenv("GITHUB_TOKEN")
-    }
+  dependencies {
+    implementation("eu.jrie.jetbrains:kotlin-shell-core:0.2.1")
   }
-}
-
-dependencies {
-    implementation("kotlin-shell-core.eu.jrie.jetbrains:kotlin-shell-core:VERSION")
 }
 ```
 
